@@ -1,0 +1,1 @@
+gcc -o mprotect_test mprotect_test_m.c

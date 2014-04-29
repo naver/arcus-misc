@@ -1,0 +1,45 @@
+
+#
+zookeeper=zkhost:4000
+
+#
+service_code=test
+
+#single_server=cachehost:11212
+
+# How many acp clients (threads) to use?
+client=20
+
+#
+rate=0
+
+#
+request=0
+
+#
+time=600
+
+keyset_size=10000000
+key_prefix=simple_sticky:
+valueset_min_size=10
+valueset_max_size=1000
+
+client_profile=torture_simple_sticky
+
+# Java client settings
+
+# How many ArcusClient pools to use?
+# Each pool has its own CacheManager that connects to ZK.
+# All ArcusClient's in the pool use the same hash ring.
+pool=1
+
+# Each pool creates this many ArcusClient's.
+# acp clients are evenly spread across ArcusClient's.
+pool_size=20
+
+# ArcusClientPool.getClient() returns a random client in the pool.
+# Set pool_use_random=true to use that method to select a random client for
+# each request.
+# Set pool_use_random=false to use getAllClients() and statically assign one
+# acp client to one ArcusClient in a round-robin fashion.
+pool_use_random=false

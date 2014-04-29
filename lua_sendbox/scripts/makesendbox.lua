@@ -1,0 +1,77 @@
+sendbox_mod_string = {}
+sendbox_mod_string["byte"] = string.byte
+sendbox_mod_string["char"] = string.char
+sendbox_mod_string["find"] = string.find
+sendbox_mod_string["format"] = string.format
+sendbox_mod_string["gmatch"] = string.gmatch
+sendbox_mod_string["gsub"] = string.gsub
+sendbox_mod_string["len"] = string.len
+sendbox_mod_string["lower"] = string.lower
+sendbox_mod_string["match"] = string.match
+sendbox_mod_string["rep"] = string.rep
+sendbox_mod_string["reverse"] = string.reverse
+sendbox_mod_string["sub"] = string.sub
+sendbox_mod_string["upper"] = string.upper
+
+sendbox_mod_table = {}
+sendbox_mod_table["insert"] = table.insert
+sendbox_mod_table["maxn"] = table.maxn
+sendbox_mod_table["remove"] = table.remove
+sendbox_mod_table["sort"] = table.sort
+
+sendbox_mod_math = {}
+sendbox_mod_math["abs"] = math.abs
+sendbox_mod_math["acos"] = math.acos
+sendbox_mod_math["asin"] = math.asin
+sendbox_mod_math["atan"] = math.atan
+sendbox_mod_math["atan2"] = math.atan2
+sendbox_mod_math["ceil"] = math.ceil
+sendbox_mod_math["cos"] = math.cos
+sendbox_mod_math["cosh"] = math.cosh
+sendbox_mod_math["deg"] = math.deg
+sendbox_mod_math["exp"] = math.exp
+sendbox_mod_math["floor"] = math.floor
+sendbox_mod_math["fmod"] = math.fmod
+sendbox_mod_math["frexp"] = math.frexp
+sendbox_mod_math["huge"] = math.huge
+sendbox_mod_math["idexp"] = math.ldexp
+sendbox_mod_math["log"] = math.log
+sendbox_mod_math["log10"] = math.log10
+sendbox_mod_math["max"] = math.max
+sendbox_mod_math["min"] = math.min
+sendbox_mod_math["modf"] = math.modf
+sendbox_mod_math["pi"] = math.pi
+sendbox_mod_math["pow"] = math.pow
+sendbox_mod_math["rad"] = math.rad
+sendbox_mod_math["random"] = math.random
+sendbox_mod_math["sin"] = math.sin
+sendbox_mod_math["sinh"] = math.sinh
+sendbox_mod_math["sqrt"] = math.sqrt
+sendbox_mod_math["tan"] = math.tan
+sendbox_mod_math["tanh"] = math.tanh
+
+sendbox_mod_os = {}
+sendbox_mod_os["clock"] = os.clock
+sendbox_mod_os["date"] = os.date
+sendbox_mod_os["difftime"] = os.difftime
+sendbox_mod_os["time"] = os.time
+
+
+sendbox_env = {}
+
+sendbox_env["assert"] = assert
+sendbox_env["error"] = error
+sendbox_env["ipairs"] = ipairs
+sendbox_env["pairs"] = pairs
+sendbox_env["pcall"] = pcall
+sendbox_env["select"] = select
+sendbox_env["tonumber"] = tonumber
+sendbox_env["tostring"] = tostring
+sendbox_env["type"] = type
+sendbox_env["unpack"] = unpack
+sendbox_env["_VERSION"] = _VERSION
+sendbox_env["xpcall"] = xpcall
+sendbox_env["string"] = sendbox_mod_string
+sendbox_env["math"] = sendbox_mod_math
+sendbox_env["table"] = sendbox_mod_table
+sendbox_env["os"] = sendbox_mod_os

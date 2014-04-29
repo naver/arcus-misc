@@ -1,0 +1,29 @@
+
+zookeeper=zkhost:4000
+service_code=test
+#single_server=cachehost:11212
+
+client=30
+
+rate=0
+request=100000
+time=0
+
+# Keys
+keyset_profile=numeric
+keyset_size=1000
+keyset_length=50
+#key_prefix=
+
+# Values
+valueset_profile=default
+valueset_min_size=30
+valueset_max_size=30
+
+# Clients
+client_profile=mget
+client_mget_keys=500
+
+pool=1
+pool_size=30
+pool_use_random=false
