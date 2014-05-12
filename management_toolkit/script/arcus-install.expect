@@ -1,0 +1,8 @@
+#!/usr/bin/expect
+set timeout 1
+set serverip "$1"
+set port "$2"
+
+send "\n"
+expect ""
+exit

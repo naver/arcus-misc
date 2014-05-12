@@ -1,0 +1,71 @@
+apply plugin: 'java'
+apply plugin: 'groovy'
+apply plugin: 'spring-boot'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+
+group = 'com.navercorp.arcus'
+version = '0.1.0'
+mainClassName = 'com.navercorp.arcus.Application'
+
+distTar {
+    compression = Compression.GZIP
+    archiveDir = baseName + '-' + version
+    into(archiveDir) {
+        from '.'
+        include 'script/*'
+    }
+}
+
+buildscript {
+    repositories {
+        maven { url 'http://repo.spring.io/libs-snapshot' }
+        mavenLocal()
+    }
+    dependencies {
+        classpath('org.springframework.boot:spring-boot-gradle-plugin:1.0.0.RC3')
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'http://repo.spring.io/libs-snapshot' }
+}
+
+dependencies {
+    // tag::jetty[]
+    compile('org.springframework.boot:spring-boot-starter-web') {
+        exclude module: 'spring-boot-starter-tomcat'
+    }
+    compile('org.springframework.boot:spring-boot-starter-jetty')
+    // end::jetty[]
+
+    // tag::actuator[]
+    compile('org.springframework.boot:spring-boot-starter-actuator')
+    testCompile('org.springframework.boot:spring-boot-starter-test')
+    // end::actuator[]
+
+    // tag::curator[]
+    compile 'org.apache.curator:curator-client:2.3.0'
+    compile 'org.apache.curator:curator-recipes:2.3.0'
+    testCompile 'org.apache.curator:curator-test:2.3.0'
+    // end::curator[]
+
+    // tag::swagger[]
+    compile 'com.mangofactory:swagger-springmvc:0.6.5'
+    // end::swagger[]
+
+    // tag::shell[]
+    compile 'ch.ethz.ganymed:ganymed-ssh2:261'
+    // end::shell[]
+
+    // tag::testing[]
+    compile 'org.codehaus.groovy:groovy-all:2.1.7'
+    testCompile 'org.codehaus.groovy:groovy-all:2.1.7'
+    testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
+    // end::testing[]
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.11'
+}
