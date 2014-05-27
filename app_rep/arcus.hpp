@@ -30,7 +30,10 @@
 #include <string>
 #include <vector>
 #include <libmemcached/memcached.h>
+#include <libmemcached/arcus.h>
+#include <libmemcached/util/pool.h>
 #include <time.h>
+#include <assert.h>
 
 #define ENABLE_TWO_COPY_REP 1 // junhyun
 
@@ -42,7 +45,6 @@ namespace arcus
     class clusters;
 
     class cached_data
-    {
     {
     friend class base_client;
     public:
@@ -161,7 +163,7 @@ namespace arcus
          */
         bool touch(std::string key, int32_t exptime, memcached_return_t *rc);
 
-#ifdef ENABLE_TWO_COPY_REP 1
+#ifdef ENABLE_TWO_COPY_REP
     private:
         clusters *_cluster;
         connection_pool *_master_pool; 
