@@ -24,7 +24,7 @@ import java.io.FileInputStream;
 public class config {
 
   public boolean pretty_stat = false;
-  public String zookeeper = "zkhost:4000";
+  public String zookeeper = "127.0.0.1:2181";
   public String service_code = "test";
   public String single_server = null;
   public int client = 10;
