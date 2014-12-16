@@ -51,7 +51,8 @@ public class torture_btree implements client_profile {
       return false;
     ElementValueType vtype = ElementValueType.BYTEARRAY;
     CollectionAttributes attr = 
-      new CollectionAttributes(100, CollectionAttributes.DEFAULT_MAXCOUNT,
+      new CollectionAttributes(cli.conf.client_exptime,
+                               CollectionAttributes.DEFAULT_MAXCOUNT,
                                CollectionOverflowAction.smallest_trim);
     CollectionFuture<Boolean> fb = cli.next_ac.asyncBopCreate(key, vtype, attr);
     boolean ok = fb.get(1000L, TimeUnit.MILLISECONDS);

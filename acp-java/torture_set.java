@@ -51,7 +51,8 @@ public class torture_set implements client_profile {
       return false;
     ElementValueType vtype = ElementValueType.BYTEARRAY;
     CollectionAttributes attr = 
-      new CollectionAttributes(100, new Long(10000),
+      new CollectionAttributes(cli.conf.client_exptime,
+                               new Long(10000),
                                CollectionOverflowAction.error);
     CollectionFuture<Boolean> fb = cli.next_ac.asyncSopCreate(key, vtype, attr);
     boolean ok = fb.get(1000L, TimeUnit.MILLISECONDS);

@@ -41,7 +41,7 @@ public class simple_set implements client_profile {
       String key = cli.ks.get_key();
       byte[] val = cli.vset.get_value();
       Future<Boolean> fb = 
-        cli.next_ac.set(key, 100 /* exptime */, val, raw_transcoder.raw_tc);
+        cli.next_ac.set(key, cli.conf.client_exptime, val, raw_transcoder.raw_tc);
       boolean ok = fb.get(1000L, TimeUnit.MILLISECONDS);
       if (!ok) {
         System.out.printf("set failed. id=%d key=%s\n", cli.id, key);

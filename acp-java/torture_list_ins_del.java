@@ -51,7 +51,8 @@ public class torture_list_ins_del implements client_profile {
       return false;
     ElementValueType vtype = ElementValueType.BYTEARRAY;
     CollectionAttributes attr = 
-      new CollectionAttributes(100, new Long(4000),
+      new CollectionAttributes(cli.conf.client_exptime,
+                               new Long(4000),
                                CollectionOverflowAction.head_trim);
     CollectionFuture<Boolean> fb = cli.next_ac.asyncLopCreate(key, vtype, attr);
     boolean ok = fb.get(1000L, TimeUnit.MILLISECONDS);

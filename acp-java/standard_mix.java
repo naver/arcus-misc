@@ -57,7 +57,8 @@ public class standard_mix implements client_profile {
       return false;
     ElementValueType vtype = ElementValueType.BYTEARRAY;
     CollectionAttributes attr = 
-      new CollectionAttributes(100, CollectionAttributes.DEFAULT_MAXCOUNT,
+      new CollectionAttributes(cli.conf.client_exptime,
+                               CollectionAttributes.DEFAULT_MAXCOUNT,
                                CollectionOverflowAction.smallest_trim);
     CollectionFuture<Boolean> fb = cli.next_ac.asyncBopCreate(key, vtype, attr);
     boolean ok = fb.get(1000L, TimeUnit.MILLISECONDS);
@@ -107,7 +108,8 @@ public class standard_mix implements client_profile {
       return false;
     ElementValueType vtype = ElementValueType.BYTEARRAY;
     CollectionAttributes attr = 
-      new CollectionAttributes(100, CollectionAttributes.DEFAULT_MAXCOUNT,
+      new CollectionAttributes(cli.conf.client_exptime,
+                               CollectionAttributes.DEFAULT_MAXCOUNT,
                                CollectionOverflowAction.error);
     // For set items, OverflowAction is always "error".
 
@@ -152,7 +154,8 @@ public class standard_mix implements client_profile {
       return false;
     ElementValueType vtype = ElementValueType.BYTEARRAY;
     CollectionAttributes attr = 
-      new CollectionAttributes(100, CollectionAttributes.DEFAULT_MAXCOUNT,
+      new CollectionAttributes(cli.conf.client_exptime,
+                               CollectionAttributes.DEFAULT_MAXCOUNT,
                                CollectionOverflowAction.tail_trim);
     // OverflowAction should be error, head_trim, or tail_trim
     CollectionFuture<Boolean> fb = cli.next_ac.asyncLopCreate(key, vtype, attr);
@@ -197,7 +200,7 @@ public class standard_mix implements client_profile {
       String key = cli.ks.get_key();
       byte[] val = cli.vset.get_value();
       Future<Boolean> fb = 
-        cli.next_ac.set(key, 100 /* exptime */, val, raw_transcoder.raw_tc);
+        cli.next_ac.set(key, cli.conf.client_exptime, val, raw_transcoder.raw_tc);
       boolean ok = fb.get(1000L, TimeUnit.MILLISECONDS);
       if (!ok) {
         System.out.printf("set failed. id=%d key=%s\n", cli.id, key);

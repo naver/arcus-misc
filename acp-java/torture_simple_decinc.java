@@ -42,7 +42,7 @@ public class torture_simple_decinc implements client_profile {
     String str = String.format("%d", cli.id+1); // +1 to avoid 0
     byte[] val = str.getBytes();
     Future<Boolean> fb = 
-      cli.next_ac.set(key, 100 /* exptime */, val, raw_transcoder.raw_tc);
+      cli.next_ac.set(key, cli.conf.client_exptime, val, raw_transcoder.raw_tc);
     boolean ok = fb.get(1000L, TimeUnit.MILLISECONDS);
     if (!ok) {
       System.out.printf("set failed. id=%d key=%s\n", cli.id, key);
@@ -84,7 +84,7 @@ public class torture_simple_decinc implements client_profile {
     if (!cli.before_request())
       return false;
     val = cli.vset.get_value();
-    fb = cli.next_ac.replace(key, 100, val, raw_transcoder.raw_tc);
+    fb = cli.next_ac.replace(key, cli.conf.client_exptime, val, raw_transcoder.raw_tc);
     ok = fb.get(1000L, TimeUnit.MILLISECONDS);
     if (!ok) {
       System.out.printf("replace failed. id=%d key=%s\n", cli.id, key);

@@ -53,7 +53,8 @@ public class torture_btree_decinc implements client_profile {
       return false;
     ElementValueType vtype = ElementValueType.BYTEARRAY;
     CollectionAttributes attr = 
-      new CollectionAttributes(100, new Long(4000),
+      new CollectionAttributes(cli.conf.client_exptime,
+                               new Long(4000),
                                CollectionOverflowAction.smallest_trim);
     CollectionFuture<Boolean> fb = cli.next_ac.asyncBopCreate(key, vtype, attr);
     boolean ok = fb.get(1000L, TimeUnit.MILLISECONDS);
