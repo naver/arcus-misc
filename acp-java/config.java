@@ -29,7 +29,7 @@ public class config {
   public String single_server = null;
   public int client = 10;
   public int rate = 0;
-  public int irg = 0;
+  public int irg = 0;  // inter-request gap (msec)
   public int request = 100000;
   public int time = 0; // Run this many seconds.  0=forever
   public int pool = 1;

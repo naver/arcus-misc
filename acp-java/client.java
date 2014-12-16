@@ -83,7 +83,7 @@ public class client implements Runnable {
           }
         }
       }
-      else if (conf.irg > 0) {
+      else if (conf.irg > 0) { // inter-request gap (msec)
         try {
           Thread.sleep(conf.irg);
         } catch (Exception e) {
