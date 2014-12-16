@@ -55,7 +55,7 @@ foreach $script (@script_list) {
     # Create a temporary config file to run the test
     open CONF, ">tmp-config.txt" or die $!;
     print CONF 
-	"zookeeper=zkhost:4000\n" .
+	"zookeeper=127.0.0.1:2181\n" .
 	"service_code=test\n" .
 	"client=30\n" .
 	"rate=0\n" .

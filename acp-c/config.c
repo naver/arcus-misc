@@ -28,7 +28,7 @@
 #include "config.h"
 
 struct config default_conf = {
-  .zookeeper = "zkhost:4000",
+  .zookeeper = "127.0.0.1:2181",
   .service_code = "test",
   .single_server = NULL,
   .client = 10,

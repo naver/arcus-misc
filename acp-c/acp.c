@@ -420,7 +420,7 @@ usage(void)
     "    than <usec>\n"
     "-quiet\n"
     "\n"
-    "Example: acp -zookeeper zkhost:4000 -service-code test"
+    "Example: acp -zookeeper 127.0.0.1:2181 -service-code test"
     " -clients 100 -rate 1000\n"
          );
   exit(0);
