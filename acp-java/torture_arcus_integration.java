@@ -267,8 +267,9 @@ public class torture_arcus_integration implements client_profile {
         boolean ok = f.get(1000L, TimeUnit.MILLISECONDS);
         if (!ok) {
           System.out.printf("Collection_Btree: BopInsert failed." +
-                            " id=%d key=%s bkey=%d\n", cli.id,
-                            key_list.get(j), bkey);
+                            " id=%d key=%s bkey=%d: %s\n", cli.id,
+                            key_list.get(j), bkey,
+                            f.getOperationStatus().getResponse());
         }
         if (!cli.after_request(ok))
           return false;
@@ -365,7 +366,8 @@ public class torture_arcus_integration implements client_profile {
       boolean ok = f.get(1000L, TimeUnit.MILLISECONDS);
       if (!ok) {
         System.out.printf("Collection_Btree: BopCreate failed." +
-                          " id=%d key=%s\n", cli.id, key);
+                          " id=%d key=%s: %s\n", cli.id, key,
+                          f.getOperationStatus().getResponse());
       }
       if (!cli.after_request(ok))
         return false;
@@ -413,7 +415,8 @@ public class torture_arcus_integration implements client_profile {
         boolean ok = f.get(1000L, TimeUnit.MILLISECONDS);
         if (!ok) {
           System.out.printf("Collection_Btree: BopUpdate failed." +
-                            " id=%d key=%s\n", cli.id, key0);
+                            " id=%d key=%s: %s\n", cli.id, key0,
+                            f.getOperationStatus().getResponse());
         }
         if (!cli.after_request(ok))
           return false;
@@ -429,7 +432,8 @@ public class torture_arcus_integration implements client_profile {
       boolean ok = f.get(1000L, TimeUnit.MILLISECONDS);
       if (!ok) {
         System.out.printf("Collection_Btree: SetAttr failed." +
-                          " id=%d key=%s\n", cli.id, key);
+                          " id=%d key=%s: %s\n", cli.id, key,
+                          f.getOperationStatus().getResponse());
       }
       if (!cli.after_request(ok))
         return false;
@@ -450,7 +454,8 @@ public class torture_arcus_integration implements client_profile {
         boolean ok = f.get(1000L, TimeUnit.MILLISECONDS);
         if (!ok) {
           System.out.printf("Collection_Btree: BopDelete failed." +
-                            " id=%d key=%s\n", cli.id, key_list.get(j));
+                            " id=%d key=%s: %s\n", cli.id, key_list.get(j),
+                            f.getOperationStatus().getResponse());
         }
         if (!cli.after_request(ok))
           return false;
@@ -487,7 +492,8 @@ public class torture_arcus_integration implements client_profile {
           boolean ok = f.get(1000L, TimeUnit.MILLISECONDS);
           if (!ok) {
             System.out.printf("Collection_Set: SopInsert failed." +
-                              " id=%d key=%s\n", cli.id, key_list.get(i));
+                              " id=%d key=%s: %s\n", cli.id, key_list.get(i),
+                              f.getOperationStatus().getResponse());
           }
           if (!cli.after_request(ok))
             return false;
@@ -533,7 +539,8 @@ public class torture_arcus_integration implements client_profile {
       boolean ok = f.get(1000L, TimeUnit.MILLISECONDS);
       if (!ok) {
         System.out.printf("Collection_Set: SopCreate failed." +
-                          " id=%d key=%s\n", cli.id, key);
+                          " id=%d key=%s: %s\n", cli.id, key,
+                          f.getOperationStatus().getResponse());
       }
       if (!cli.after_request(ok))
         return false;
@@ -575,7 +582,8 @@ public class torture_arcus_integration implements client_profile {
       boolean ok = f.get(1000L, TimeUnit.MILLISECONDS);
       if (!ok) {
         System.out.printf("Collection_Set: SetAttr failed." +
-                          " id=%d key=%s\n", cli.id, key_list.get(0));
+                          " id=%d key=%s: %s\n", cli.id, key_list.get(0),
+                          f.getOperationStatus().getResponse());
       }
       if (!cli.after_request(ok))
         return false;
@@ -593,7 +601,8 @@ public class torture_arcus_integration implements client_profile {
           boolean ok = f.get(1000L, TimeUnit.MILLISECONDS);
           if (!ok) {
             System.out.printf("Collection_Set: SopDelete failed." +
-                              " id=%d key=%s\n", cli.id, key_list.get(i));
+                              " id=%d key=%s: %s\n", cli.id, key_list.get(i),
+                              f.getOperationStatus().getResponse());
           }
           if (!cli.after_request(ok))
             return false;
@@ -632,7 +641,8 @@ public class torture_arcus_integration implements client_profile {
           boolean ok = f.get(1000L, TimeUnit.MILLISECONDS);
           if (!ok) {
             System.out.printf("Collection_List: LopInsert failed." +
-                              " id=%d key=%s\n", cli.id, key_list.get(i));
+                              " id=%d key=%s: %s\n", cli.id, key_list.get(i),
+                              f.getOperationStatus().getResponse());
           }
           if (!cli.after_request(ok))
             return false;
@@ -701,7 +711,8 @@ public class torture_arcus_integration implements client_profile {
       boolean ok = f.get(1000L, TimeUnit.MILLISECONDS);
       if (!ok) {
         System.out.printf("Collection_List: SetAttr failed." +
-                          " id=%d key=%s\n", cli.id, key_list.get(0));
+                          " id=%d key=%s: %s\n", cli.id, key_list.get(0),
+                          f.getOperationStatus().getResponse());
       }
       if (!cli.after_request(ok))
         return false;
@@ -719,7 +730,8 @@ public class torture_arcus_integration implements client_profile {
         boolean ok = f.get(1000L, TimeUnit.MILLISECONDS);
         if (!ok) {
           System.out.printf("Collection_List: LopDelete failed." +
-                            " id=%d key=%s\n", cli.id, key_list.get(i));
+                            " id=%d key=%s: %s\n", cli.id, key_list.get(i),
+                            f.getOperationStatus().getResponse());
         }
         if (!cli.after_request(ok))
           return false;

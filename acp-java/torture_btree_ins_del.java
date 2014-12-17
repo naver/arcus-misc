@@ -57,7 +57,8 @@ public class torture_btree_ins_del implements client_profile {
     CollectionFuture<Boolean> fb = cli.next_ac.asyncBopCreate(key, vtype, attr);
     boolean ok = fb.get(1000L, TimeUnit.MILLISECONDS);
     if (!ok) {
-      System.out.printf("bop create failed. id=%d key=%s\n", cli.id, key);
+      System.out.printf("bop create failed. id=%d key=%s: %s\n", cli.id,
+                        key, fb.getOperationStatus().getResponse());
     }
     if (!cli.after_request(ok))
       return false;
@@ -73,8 +74,9 @@ public class torture_btree_ins_del implements client_profile {
                                       null /* Do not auto-create item */);
       ok = fb.get(1000L, TimeUnit.MILLISECONDS);
       if (!ok) {
-        System.out.printf("bop insert failed. id=%d key=%s bkey=%d\n", cli.id,
-                          key, bkey);
+        System.out.printf("bop insert failed. id=%d key=%s bkey=%d: %s\n",
+                          cli.id, key, bkey,
+                          fb.getOperationStatus().getResponse());
       }
       if (!cli.after_request(ok))
         return false;
@@ -88,8 +90,9 @@ public class torture_btree_ins_del implements client_profile {
                                       true /* dropIfEmpty */);
       ok = fb.get(1000L, TimeUnit.MILLISECONDS);
       if (!ok) {
-        System.out.printf("bop delete failed. id=%d key=%s bkey=%d\n", cli.id,
-                          key, bkey);
+        System.out.printf("bop delete failed. id=%d key=%s bkey=%d: %s\n",
+                          cli.id, key, bkey,
+                          fb.getOperationStatus().getResponse());
       }
       if (!cli.after_request(ok))
         return false;

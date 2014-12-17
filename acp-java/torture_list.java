@@ -57,7 +57,8 @@ public class torture_list implements client_profile {
     CollectionFuture<Boolean> fb = cli.next_ac.asyncLopCreate(key, vtype, attr);
     boolean ok = fb.get(1000L, TimeUnit.MILLISECONDS);
     if (!ok) {
-      System.out.printf("lop create failed. id=%d key=%s\n", cli.id, key);
+      System.out.printf("lop create failed. id=%d key=%s: %s\n", cli.id,
+                        key, fb.getOperationStatus().getResponse());
     }
     if (!cli.after_request(ok))
       return false;
@@ -80,8 +81,9 @@ public class torture_list implements client_profile {
                                       null /* Do not auto-create item */);
       ok = fb.get(1000L, TimeUnit.MILLISECONDS);
       if (!ok) {
-        System.out.printf("lop insert failed. id=%d key=%s lkey=%d\n", cli.id,
-                          key, lkey);
+        System.out.printf("lop insert failed. id=%d key=%s lkey=%d: %s\n",
+                          cli.id, key, lkey,
+                          fb.getOperationStatus().getResponse());
       }
       if (!cli.after_request(ok))
         return false;

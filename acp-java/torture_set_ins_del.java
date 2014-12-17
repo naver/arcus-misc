@@ -57,7 +57,8 @@ public class torture_set_ins_del implements client_profile {
     CollectionFuture<Boolean> fb = cli.next_ac.asyncSopCreate(key, vtype, attr);
     boolean ok = fb.get(1000L, TimeUnit.MILLISECONDS);
     if (!ok) {
-      System.out.printf("sop create failed. id=%d key=%s\n", cli.id, key);
+      System.out.printf("sop create failed. id=%d key=%s: %s\n", cli.id,
+                        key, fb.getOperationStatus().getResponse());
     }
     if (!cli.after_request(ok))
       return false;
@@ -79,8 +80,9 @@ public class torture_set_ins_del implements client_profile {
                                       null /* Do not auto-create item */);
       ok = fb.get(1000L, TimeUnit.MILLISECONDS);
       if (!ok) {
-        System.out.printf("sop insert failed. id=%d key=%s skey=%d\n", cli.id,
-                          key, skey);
+        System.out.printf("sop insert failed. id=%d key=%s skey=%d: %s\n",
+                          cli.id, key, skey,
+                          fb.getOperationStatus().getResponse());
       }
       if (!cli.after_request(ok))
         return false;
@@ -102,8 +104,9 @@ public class torture_set_ins_del implements client_profile {
       fb = cli.next_ac.asyncSopDelete(key, val, true /* dropIfEmpty */);
       ok = fb.get(1000L, TimeUnit.MILLISECONDS);
       if (!ok) {
-        System.out.printf("sop delete failed. id=%d key=%s skey=%d\n", cli.id,
-                          key, skey);
+        System.out.printf("sop delete failed. id=%d key=%s skey=%d: %s\n",
+                          cli.id, key, skey,
+                          fb.getOperationStatus().getResponse());
       }
       if (!cli.after_request(ok))
         return false;
