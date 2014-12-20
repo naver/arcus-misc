@@ -19,6 +19,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import net.spy.memcached.collection.CollectionAttributes;
+import net.spy.memcached.collection.CollectionType;
 import net.spy.memcached.collection.CollectionOverflowAction;
 import net.spy.memcached.collection.ElementValueType;
 import net.spy.memcached.internal.CollectionFuture;
@@ -48,9 +49,37 @@ public class standard_mix implements client_profile {
     return true;
   }
   
+  private boolean do_delete_if_exist(client cli, String key, CollectionType type)
+      throws Exception {
+    // Get attributes
+    if (!cli.before_request())
+      return false;
+    CollectionFuture<CollectionAttributes> f = cli.next_ac.asyncGetAttr(key);
+    CollectionAttributes attr = f.get(1000L, TimeUnit.MILLISECONDS);
+    if (!cli.after_request(true))
+      return false;
+
+    if (attr != null && (type != CollectionType.kv || type != attr.getType())) {
+      if (!cli.before_request())
+        return false;
+      Future<Boolean> fb = cli.next_ac.delete(key);
+      boolean ok = fb.get(1000L, TimeUnit.MILLISECONDS);
+      if (!ok) {
+        System.out.printf("KeyValue: delete failed. id=%d key=%s\n",
+                          cli.id, key);
+      }
+      if (!cli.after_request(ok))
+        return false;
+    }
+    return true; 
+  }
+ 
   public boolean do_btree_test(client cli) throws Exception {
     // Pick a key
     String key = cli.ks.get_key();
+
+    if (!do_delete_if_exist(cli, key, CollectionType.btree))
+      return false;
 
     // Create a btree item
     if (!cli.before_request())
@@ -105,6 +134,9 @@ public class standard_mix implements client_profile {
     // Pick a key
     String key = cli.ks.get_key();
     
+    if (!do_delete_if_exist(cli, key, CollectionType.set))
+      return false;
+
     // Create a set item
     if (!cli.before_request())
       return false;
@@ -153,6 +185,9 @@ public class standard_mix implements client_profile {
     // Pick a key
     String key = cli.ks.get_key();
     
+    if (!do_delete_if_exist(cli, key, CollectionType.list))
+      return false;
+
     // Create a list item
     if (!cli.before_request())
       return false;
@@ -200,10 +235,13 @@ public class standard_mix implements client_profile {
 
     // Set a number of items
     for (int i = 0; i < 100; i++) {
-      if (!cli.before_request())
-        return false;
       // Pick a key
       String key = cli.ks.get_key();
+      if (!do_delete_if_exist(cli, key, CollectionType.btree))
+        return false;
+
+      if (!cli.before_request())
+        return false;
       byte[] val = cli.vset.get_value();
       Future<Boolean> fb = 
         cli.next_ac.set(key, cli.conf.client_exptime, val, raw_transcoder.raw_tc);
