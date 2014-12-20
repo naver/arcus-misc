@@ -1097,31 +1097,50 @@ public class compare {
       }
     }
 
-    System.out.println("Finished comparison");
+    boolean isSame = true; 
+    do {
+      if (simple_bad > 0 || simple_exist > 0 ||
+          simple_attr > 0 || simple_val > 0 || simple_cas > 0 ||
+          simple_missing_0 > 0 || simple_missing_0_exp > 0 ||
+          simple_missing_1 > 0 || simple_missing_1_exp > 0) {
+        isSame = false; break;
+      }
+      if (btree_bad > 0 || btree_exist > 0 || btree_attr > 0 ||
+          btree_eflag > 0 || btree_val > 0 ||
+          btree_val_null > 0 || btree_fetch_error > 0) {
+        isSame = false; break;
+      }
+      if (list_bad > 0 || list_exist > 0 || list_attr > 0 || list_val > 0) {
+        isSame = false; break;
+      }
+      if (set_bad > 0 || set_exist > 0 || set_attr > 0 || set_val > 0) {
+        isSame = false; break;
+      }
+    } while(false);
+
+    if (isSame == true) {
+      System.out.println("Finished comparison: SAME");
+    } else {
+      System.out.println("Finished comparison: DIFFERENT");
+    } 
     System.out.println("Server list");
     for (myclient cli : server_list) {
       System.out.println(cli.name);
     }
-    System.out.printf("SIMPLE ok=%d bad=%d missing=%d attr=%d value=%d\n" +
-                      "missing_0=%d missing_0_expired=%d" +
-                      " missing_1=%d missing_1_expired=%d\n" +
-                      " cas=%d\n",
-                      simple_equal, simple_bad, simple_exist, simple_attr,
-                      simple_val, simple_missing_0, simple_missing_0_exp,
-                      simple_missing_1, simple_missing_1_exp,
-                      simple_cas);
-    System.out.printf("BTREE ok=%d bad=%d missing=%d attr=%d eflag=%d" +
-                      " value=%d value_null=%d fetch_error=%d\n", 
+    System.out.printf("SIMPLE ok=%d bad=%d missing=%d attr=%d value=%d cas=%d\n" +
+                      "       missing_0=%d missing_0_expired=%d missing_1=%d missing_1_expired=%d\n",
+                      simple_equal, simple_bad, simple_exist, simple_attr, simple_val, simple_cas,
+                      simple_missing_0, simple_missing_0_exp, simple_missing_1, simple_missing_1_exp);
+    System.out.printf("BTREE  ok=%d bad=%d missing=%d attr=%d eflag=%d " +
+                              "value=%d value_null=%d fetch_error=%d\n",
                       btree_equal, btree_bad, btree_exist, btree_attr,
-                      btree_eflag, btree_val, btree_val_null, 
-                      btree_fetch_error);
-    System.out.printf("bytearraybkey=%d expired_on_all=%d empty=%d\n", 
-                      stats_btree_bytearraybkey,
-                      stats_btree_expired_on_all,
+                      btree_eflag, btree_val, btree_val_null, btree_fetch_error);
+    System.out.printf("       (bytearraybkey=%d expired_on_all=%d empty=%d)\n", 
+                      stats_btree_bytearraybkey, stats_btree_expired_on_all,
                       stats_btree_empty);
-    System.out.printf("LIST ok=%d bad=%d missing=%d attr=%d value=%d\n",
+    System.out.printf("LIST   ok=%d bad=%d missing=%d attr=%d value=%d\n",
                       list_equal, list_bad, list_exist, list_attr, list_val);
-    System.out.printf("SET ok=%d bad=%d missing=%d attr=%d value=%d\n",
+    System.out.printf("SET    ok=%d bad=%d missing=%d attr=%d value=%d\n",
                       set_equal, set_bad, set_exist, set_attr, set_val);
   }
 
