@@ -1147,7 +1147,7 @@ public class compare {
 
   public void parse_args(String[] args) {
     for (int i = 0; i < args.length; i++) {
-	    if (args[i].equals("-keydump")) {
+      if (args[i].equals("-keydump")) {
         i++;
         if (i >= args.length) {
           System.out.println("-keydump requires dumpfile");
@@ -1166,32 +1166,32 @@ public class compare {
           else
             break;
         }
-	    }
-	    else if (args[i].equals("-server")) {
+      }
+      else if (args[i].equals("-server")) {
         i++;
         if (i >= args.length) {
           System.out.println("-server requires ip:port");
           System.exit(0);
         }
         args_server.add(args[i]);
-	    }
-	    else if (args[i].equals("-key")) {
+      }
+      else if (args[i].equals("-key")) {
         i++;
         if (i >= args.length) {
           System.out.println("-key requires a key string");
           System.exit(0);
         }
         args_key = args[i];
-	    }
-	    else if (args[i].equals("-cas")) {
+      }
+      else if (args[i].equals("-cas")) {
         args_cas = true;
-	    }
-	    else if (args[i].equals("-v")) {
+      }
+      else if (args[i].equals("-v")) {
         args_verbose++;
-	    }
-	    else if (args[i].equals("-q")) {
+      }
+      else if (args[i].equals("-q")) {
         args_quiet = true;
-	    }
+      }
       else {
         System.out.println("Unknown argument: " + args[i]);
         usage();
