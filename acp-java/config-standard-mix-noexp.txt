@@ -1,0 +1,33 @@
+# ZooKeeper and ServiceCode
+zookeeper=127.0.0.1:2181
+#single_server=127.0.0.1:20120
+service_code=test
+
+# the number of client threads.
+client=20
+
+# Control requests
+# request rate: requests / second
+rate=0
+# total requests  
+request=50000
+# run time (unit: seconds) 
+time=0
+
+# Keys
+key_prefix=standard_mix:
+keyset_size=1000000
+
+# Values
+valueset_profile=default
+valueset_min_size=30
+valueset_max_size=2000
+
+# Clients
+client_profile=standard_mix
+# expire time
+client_exptime=0
+
+pool=1
+pool_size=20
+pool_use_random=false
