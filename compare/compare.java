@@ -44,6 +44,7 @@ import net.spy.memcached.transcoders.Transcoder;
 public class compare {
 
   static final long op_timeout = 4000L; // 4 seconds
+  static final long expDiffLimit = 3; // (unit: seconds)
 
   // Receive raw bytes
   class mytc implements Transcoder<byte[]> {
@@ -260,7 +261,7 @@ public class compare {
         exp0 -= exp1;
       else
         exp0 = exp1 - exp0;
-      if (exp0 > 2)
+      if (exp0 > expDiffLimit)
         return false;
     }
     return true;
@@ -445,7 +446,7 @@ public class compare {
         exp0 -= exp1;
       else
         exp0 = exp1 - exp0;
-      if (exp0 > 2)
+      if (exp0 > expDiffLimit)
         return false;
     }
     return true;
@@ -554,7 +555,7 @@ public class compare {
         else {
           System.out.println("Attributes show a non-zero count, but" +
                              " cannot fetch elements.");
-          if (attrs.get(0).getExpireTime() < 2) {
+          if (attrs.get(0).getExpireTime() <= expDiffLimit) {
             System.out.println("The item is about to expire. Ignore the" +
                                " error. exptime=" + 
                                attrs.get(0).getExpireTime());
