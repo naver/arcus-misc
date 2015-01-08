@@ -831,12 +831,31 @@ public class compare {
     }
     else {
       // some null
-      System.out.println("Key exists on some servers but not others.");
+      //System.out.println("Key exists on some servers but not others.");
+      //for (int i = 0; i < server_count; i++) {
+      //  System.out.println(server_list.get(i).name + " " + 
+      //                     (values.get(i) == null ? "not found" : "found"));
+      //}
+      //return comp_result.EXIST_DIFF;
+      comp_result res = comp_result.EQUAL;
       for (int i = 0; i < server_count; i++) {
-        System.out.println(server_list.get(i).name + " " + 
-                           (values.get(i) == null ? "not found" : "found"));
+        if (values.get(i) != null && attrs.get(i).getExpireTime() > 2) {
+          res = comp_result.EXIST_DIFF;
+          break;
+        }
       }
-      return comp_result.EXIST_DIFF;
+      if (res != comp_result.EQUAL) {
+        System.out.println("Key exists on some servers but not others.");
+        for (int i = 0; i < server_count; i++) {
+          if (values.get(i) == null) {
+            System.out.println(server_list.get(i).name + " not found");
+          } else {
+            System.out.println(server_list.get(i).name + " found (exptime=" +
+                               attrs.get(i).getExpireTime() + ")");
+          }
+        }
+      }
+      return res;
     }
     return comp_result.EQUAL;
   }
@@ -917,20 +936,39 @@ public class compare {
     }
     else {
       // some null
-      System.out.println("Key exists on some servers but not others.");
+      //System.out.println("Key exists on some servers but not others.");
+      //for (int i = 0; i < server_count; i++) {
+      //  System.out.println(server_list.get(i).name + " " + 
+      //                     (values.get(i) == null ? "not found" : "found"));
+      //}
+      //return comp_result.EXIST_DIFF;
+      comp_result res = comp_result.EQUAL;
       for (int i = 0; i < server_count; i++) {
-        System.out.println(server_list.get(i).name + " " + 
-                           (values.get(i) == null ? "not found" : "found"));
+        if (values.get(i) != null && attrs.get(i).getExpireTime() > 2) {
+          res = comp_result.EXIST_DIFF;
+          break;
+        }
       }
-      return comp_result.EXIST_DIFF;
+      if (res != comp_result.EQUAL) {
+        System.out.println("Key exists on some servers but not others.");
+        for (int i = 0; i < server_count; i++) {
+          if (values.get(i) == null) {
+            System.out.println(server_list.get(i).name + " not found");
+          } else {
+            System.out.println(server_list.get(i).name + " found (exptime=" +
+                               attrs.get(i).getExpireTime() + ")");
+          }
+        }
+      }
+      return res;
     }
     return comp_result.EQUAL;
   }
 
   // FIXME
-  int stats_btree_bytearraybkey;
-  int stats_btree_expired_on_all;
-  int stats_btree_empty;
+  int stats_btree_bytearraybkey = 0;
+  int stats_btree_expired_on_all = 0;
+  int stats_btree_empty = 0;
 
   void do_compare() throws Exception {
     int simple_equal = 0;
