@@ -44,7 +44,7 @@ import net.spy.memcached.transcoders.Transcoder;
 public class compare {
 
   static final long op_timeout = 4000L; // 4 seconds
-  static final long expDiffLimit = 3; // (unit: seconds)
+  static final long expDiffLimit = 2; // (unit: seconds)
 
   // Receive raw bytes
   class mytc implements Transcoder<byte[]> {
@@ -365,14 +365,14 @@ public class compare {
         // Check exptime.  If it is within 2 seconds, ignore.
 
         if (values.get(0) == null) {
-          if (attrs.get(1) == null || attrs.get(1).getExpireTime() <= 2)
+          if (attrs.get(1) == null || attrs.get(1).getExpireTime() <= expDiffLimit)
             return comp_result.MISSING_0_EXP;
           else
             return comp_result.MISSING_0;
         }
         else {
           //System.out.println(attrs.get(0));
-          if (attrs.get(0) == null || attrs.get(0).getExpireTime() <= 2)
+          if (attrs.get(0) == null || attrs.get(0).getExpireTime() <= expDiffLimit)
             return comp_result.MISSING_1_EXP;
           else
             return comp_result.MISSING_1;
@@ -475,10 +475,10 @@ public class compare {
       if ((v0_attr == null && v_attr != null) ||
           (v0_attr != null && v_attr == null)) {
 
-        if (v0_attr != null && v0_attr.getExpireTime() <= 2) {
+        if (v0_attr != null && v0_attr.getExpireTime() <= expDiffLimit) {
           // It is okay if one is about to expire (exptime <= 2 seconds...)
         }
-        else if (v_attr != null && v_attr.getExpireTime() <= 2) {
+        else if (v_attr != null && v_attr.getExpireTime() <= expDiffLimit) {
         }
         else {
           // Not okay.
@@ -839,7 +839,7 @@ public class compare {
       //return comp_result.EXIST_DIFF;
       comp_result res = comp_result.EQUAL;
       for (int i = 0; i < server_count; i++) {
-        if (attrs.get(i) != null && attrs.get(i).getExpireTime() > 2) {
+        if (attrs.get(i) != null && attrs.get(i).getExpireTime() > expDiffLimit) {
           res = comp_result.EXIST_DIFF;
           break;
         }
@@ -944,7 +944,7 @@ public class compare {
       //return comp_result.EXIST_DIFF;
       comp_result res = comp_result.EQUAL;
       for (int i = 0; i < server_count; i++) {
-        if (attrs.get(i) != null && attrs.get(i).getExpireTime() > 2) {
+        if (attrs.get(i) != null && attrs.get(i).getExpireTime() > expDiffLimit) {
           res = comp_result.EXIST_DIFF;
           break;
         }
