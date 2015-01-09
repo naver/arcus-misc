@@ -243,26 +243,26 @@ public class compare {
   // If exptimes are within 2 seconds apart, it is okay.
   boolean compare_simple_attributes(CollectionAttributes a0, 
                                     CollectionAttributes a1) {
-    if (a0 == null && a1 == null)
-      return true;
-    else if (a0 == null && a1 != null)
-      return false;
-    else if (a0 != null && a1 == null)
-      return false;
-    int exp0 = a0.getExpireTime();
-    int exp1 = a1.getExpireTime();
-    if (exp0 == 0) {
-      if (exp1 != 0)
-        return false;
-      // 0 has a special meaning: no expiration.  So both must be the same.
+    if (a0 == null && a1 != null) {
+      return (a1.getExpireTime() > expDiffLimit ? false : true);
+    } 
+    if (a0 != null && a1 == null) {
+      return (a0.getExpireTime() > expDiffLimit ? false : true);
     }
-    else if (exp0 != exp1) {
-      if (exp0 > exp1)
-        exp0 -= exp1;
-      else
-        exp0 = exp1 - exp0;
-      if (exp0 > expDiffLimit)
-        return false;
+    if (a0 != null && a1 != null) {
+      int exp0 = a0.getExpireTime();
+      int exp1 = a1.getExpireTime();
+      if (exp0 != exp1) {
+        //  0 has a special meaning: no expiration.
+        // -1 has a special meaning: no expiration & no eviction 
+        // So, both must be the same.
+        if (exp0 == 0 || exp0 == -1 || exp1 == 0 || exp1 == -1)
+          return false;
+        // both have positive integers
+        int expDiff = ((exp0 > exp1) ? (exp0-exp1) : (exp1-exp0));
+        if (expDiff > expDiffLimit)
+          return false;
+      }
     }
     return true;
   }
@@ -363,7 +363,6 @@ public class compare {
       }
       if (server_count == 2) {
         // Check exptime.  If it is within 2 seconds, ignore.
-
         if (values.get(0) == null) {
           if (attrs.get(1) == null || attrs.get(1).getExpireTime() <= expDiffLimit)
             return comp_result.MISSING_0_EXP;
@@ -388,17 +387,22 @@ public class compare {
                                   CollectionAttributes a1) {
     if (a0 == null && a1 == null)
       return true;
-    else if (!(a0 != null && a1 != null))
+
+    // compare exptime
+    if (!compare_simple_attributes(a0, a1)) 
       return false;
-    Long l0, l1;
-    l0 = a0.getCount();
-    l1 = a1.getCount();
-    if ((l0 == null && l1 != null) ||
-        (l0 != null && l1 == null) ||
-        (!(l0 == null && l1 == null) &&
-         !l0.equals(l1))) {
-      System.out.println("count is different");
+
+    // compare collection specific attributes
+    if (a0 == null || a1 == null) {
       return false;
+    }
+    Long l0 = a0.getCount();
+    Long l1 = a1.getCount();
+    if (l0 != null || l1 != null) {
+      if (l0 == null || l1 == null || !l0.equals(l1)) {
+        System.out.println("count is different");
+        return false;
+      }
     }
     if (!a0.getMaxCount().equals(a1.getMaxCount())) {
       System.out.println("maxcount is different");
@@ -414,12 +418,11 @@ public class compare {
     }
     l0 = a0.getMaxBkeyRange();
     l1 = a1.getMaxBkeyRange();
-    if ((l0 == null && l1 != null) ||
-        (l0 != null && l1 == null) ||
-        (!(l0 == null && l1 == null) &&
-         !l0.equals(l1))) {
-      System.out.println("maxbkeyrange is different");
-      return false;
+    if (l0 != null || l1 != null) {
+      if (l0 == null || l1 == null || !l0.equals(l1)) {
+        System.out.println("maxbkeyrange is different");
+        return false;
+      }
     }
     if (!Arrays.equals(a0.getMaxBkeyRangeByBytes(), 
                        a1.getMaxBkeyRangeByBytes())) {
@@ -433,21 +436,6 @@ public class compare {
     if (a0.getType() != a1.getType()) {
       System.out.println("type is different");
       return false;
-    }
-    int exp0 = a0.getExpireTime();
-    int exp1 = a1.getExpireTime();
-    if (exp0 == 0) {
-      if (exp1 != 0)
-        return false;
-      // 0 has a special meaning: no expiration.  So both must be the same.
-    }
-    else if (exp0 != exp1) {
-      if (exp0 > exp1)
-        exp0 -= exp1;
-      else
-        exp0 = exp1 - exp0;
-      if (exp0 > expDiffLimit)
-        return false;
     }
     return true;
   }
