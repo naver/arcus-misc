@@ -839,7 +839,7 @@ public class compare {
       //return comp_result.EXIST_DIFF;
       comp_result res = comp_result.EQUAL;
       for (int i = 0; i < server_count; i++) {
-        if (values.get(i) != null && attrs.get(i).getExpireTime() > 2) {
+        if (attrs.get(i) != null && attrs.get(i).getExpireTime() > 2) {
           res = comp_result.EXIST_DIFF;
           break;
         }
@@ -847,7 +847,7 @@ public class compare {
       if (res != comp_result.EQUAL) {
         System.out.println("Key exists on some servers but not others.");
         for (int i = 0; i < server_count; i++) {
-          if (values.get(i) == null) {
+          if (attrs.get(i) == null) {
             System.out.println(server_list.get(i).name + " not found");
           } else {
             System.out.println(server_list.get(i).name + " found (exptime=" +
@@ -944,7 +944,7 @@ public class compare {
       //return comp_result.EXIST_DIFF;
       comp_result res = comp_result.EQUAL;
       for (int i = 0; i < server_count; i++) {
-        if (values.get(i) != null && attrs.get(i).getExpireTime() > 2) {
+        if (attrs.get(i) != null && attrs.get(i).getExpireTime() > 2) {
           res = comp_result.EXIST_DIFF;
           break;
         }
@@ -952,7 +952,7 @@ public class compare {
       if (res != comp_result.EQUAL) {
         System.out.println("Key exists on some servers but not others.");
         for (int i = 0; i < server_count; i++) {
-          if (values.get(i) == null) {
+          if (attrs.get(i) == null) {
             System.out.println(server_list.get(i).name + " not found");
           } else {
             System.out.println(server_list.get(i).name + " found (exptime=" +
