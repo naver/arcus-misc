@@ -44,7 +44,7 @@ import net.spy.memcached.transcoders.Transcoder;
 public class compare {
 
   static final long op_timeout = 4000L; // 4 seconds
-  static final long expDiffLimit = 2; // (unit: seconds)
+  static final long expDiffLimit = 3; // (unit: seconds)
 
   // Receive raw bytes
   class mytc implements Transcoder<byte[]> {
