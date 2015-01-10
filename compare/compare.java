@@ -111,7 +111,7 @@ public class compare {
       }
       */
     }
-    
+
     public int hashCode() {
       //System.out.println("hash_val=" + hash_val);
       return hash_val;
@@ -151,7 +151,7 @@ public class compare {
       if (4 != bin.read(buf, 0, 4))
         throw new Exception("Cannot read key length");
       // Little endian
-      int len = (((int)buf[0]) & 0xff) + 
+      int len = (((int)buf[0]) & 0xff) +
         ((((int)buf[1]) & 0xff) << 8) +
         ((((int)buf[2]) & 0xff) << 16) +
         ((((int)buf[3]) & 0xff) << 24);
@@ -208,7 +208,7 @@ public class compare {
       //Adler32 sum = new Adler32();
       //sum.reset();
       //sum.update(args_key.getBytes());
-      Key k = new Key(args_key.getBytes(), Key.BTREE, 
+      Key k = new Key(args_key.getBytes(), Key.BTREE,
                       /* (int)sum.getValue() */ 0);
       keymap.put(k, k);
     }
@@ -240,12 +240,613 @@ public class compare {
       MISSING_0, MISSING_1, MISSING_0_EXP, MISSING_1_EXP, CAS_DIFF,
   }
 
+  comp_result compareKeyExist(CollectionAttributes a0, CollectionAttributes a1) {
+    if (a0 == null || a1 == null) {
+      if (a0 != null) {
+        int exp0 = a0.getExpireTime();
+        if (exp0 == -1 || exp0 == 0 || exp0 > expDiffLimit)
+          return comp_result.EXIST_DIFF;
+        else
+          return comp_result.MISSING_0_EXP;
+      }
+      if (a1 != null) {
+        int exp1 = a1.getExpireTime();
+        if (exp1 == -1 || exp1 == 0 || exp1 > expDiffLimit)
+          return comp_result.EXIST_DIFF;
+        else
+          return comp_result.MISSING_1_EXP;
+      }
+    }
+    return comp_result.EQUAL;
+  }
+
+  comp_result compareKeyAttrs(CollectionAttributes a0, CollectionAttributes a1, Key key) {
+    assert(a0 != null && a1 != null);
+    if (a0.getType() != a1.getType()) {
+      System.out.println("type is different");
+      return comp_result.ATTR_DIFF;
+    }
+    if (!a0.getFlags().equals(a1.getFlags())) {
+      System.out.println("flags is different");
+      return comp_result.ATTR_DIFF;
+    }
+    if (true) {
+      int exp0 = a0.getExpireTime();
+      int exp1 = a1.getExpireTime();
+      if (exp0 != exp1) {
+        //  0 has a special meaning: no expiration.
+        // -1 has a special meaning: no expiration & no eviction
+        // So, both must be the same.
+        if (exp0 == 0 || exp0 == -1 || exp1 == 0 || exp1 == -1) {
+          System.out.println("exptime (0 or -1) is different");
+          return comp_result.ATTR_DIFF;
+        }
+        // both have positive integers
+        int expDiff = ((exp0 > exp1) ? (exp0-exp1) : (exp1-exp0));
+        if (expDiff > expDiffLimit) {
+          System.out.println("exptime is different");
+          return comp_result.ATTR_DIFF;
+        }
+      }
+    }
+
+    if (key.type != Key.SIMPLE) {
+      // compare common collection attributes
+      Long l0 = a0.getCount();
+      Long l1 = a1.getCount();
+      if (l0 != null || l1 != null) {
+        if (l0 == null || l1 == null || !l0.equals(l1)) {
+          System.out.println("count is different");
+          return comp_result.ATTR_DIFF;
+        }
+      }
+      if (!a0.getMaxCount().equals(a1.getMaxCount())) {
+        System.out.println("maxcount is different");
+        return comp_result.ATTR_DIFF;
+      }
+      if (!a0.getOverflowAction().equals(a1.getOverflowAction())) {
+        System.out.println("overflowaction is different");
+        return comp_result.ATTR_DIFF;
+      }
+      if (!a0.getReadable().equals(a1.getReadable())) {
+        System.out.println("readable is different");
+        return comp_result.ATTR_DIFF;
+      }
+      // compare btree specific attributes
+      if (key.type == Key.BTREE) {
+        l0 = a0.getMaxBkeyRange();
+        l1 = a1.getMaxBkeyRange();
+        if (l0 != null || l1 != null) {
+          if (l0 == null || l1 == null || !l0.equals(l1)) {
+            System.out.println("maxbkeyrange is different");
+            return comp_result.ATTR_DIFF;
+          }
+        }
+        if (!Arrays.equals(a0.getMaxBkeyRangeByBytes(),
+                           a1.getMaxBkeyRangeByBytes())) {
+          System.out.println("maxbkeyrange (bytes) is different");
+          return comp_result.ATTR_DIFF;
+        }
+      }
+    }
+    return comp_result.EQUAL;
+  }
+
+  comp_result compareItemAttributes(Key key, Vector<CollectionAttributes> attrs) {
+    int server_count = server_list.size();
+    comp_result totResult = comp_result.EQUAL;
+    comp_result curResult;
+    CollectionAttributes v0_attr;
+    CollectionAttributes vi_attr;
+
+    v0_attr = attrs.get(0);
+    for (int i = 1; i < server_count; i++) {
+      vi_attr = attrs.get(i);
+      curResult = compareKeyExist(v0_attr, vi_attr);
+      if (curResult != comp_result.EQUAL) {
+        if (totResult != comp_result.EXIST_DIFF)
+          totResult = curResult;
+      }
+    }
+    if (totResult == comp_result.EXIST_DIFF) {
+      System.out.println("Key exists on some servers but not others.");
+      for (int i = 0; i < server_count; i++) {
+        if (attrs.get(i) == null) {
+          System.out.println(server_list.get(i).name + " not found");
+        } else {
+          System.out.println(server_list.get(i).name + " found (exptime=" +
+                             attrs.get(i).getExpireTime() + ")");
+        }
+      }
+      return totResult;
+    }
+    if (totResult != comp_result.EQUAL) {
+      // comp_result.MISSING_0_EXP or comp_result.MISSING_1_EXP
+      totResult = comp_result.EQUAL;
+    } else {
+      v0_attr = attrs.get(0);
+      for (int i = 1; i < server_count; i++) {
+        vi_attr = attrs.get(i);
+        curResult = compareKeyAttrs(v0_attr, vi_attr, key);
+        if (curResult != comp_result.EQUAL) {
+          System.out.println("Attributes are different." +
+                             " server0=" + server_list.get(0).name + " attr0=" + v0_attr +
+                             " serveri=" + server_list.get(i).name + " attri=" + vi_attr);
+          totResult = curResult;
+        }
+      }
+    }
+    return totResult;
+  }
+
+  comp_result compare_simple_key(Key key) throws Exception {
+    int server_count = server_list.size();
+    Vector<byte[]> values = new Vector<byte[]>(server_count);
+    Vector<Long> cas_numbers = new Vector<Long>(server_count);
+    Vector<CollectionAttributes> attrs = new Vector<CollectionAttributes>(server_count);
+
+    // get values
+    for (int i = 0; i < server_count; i++) {
+      myclient cli = server_list.get(i);
+      byte[] val;
+      long cas_num;
+
+      if (args_cas) {
+        // We are checking cas numbers.  Use "gets" to get the value and
+        // the cas number.
+        Future<CASValue<byte[]>> fu = cli.asyncGets(key.str, tc);
+        CASValue<byte[]> casv = fu.get(op_timeout, TimeUnit.MILLISECONDS);
+        if (casv != null) {
+          val = casv.getValue();
+          cas_num = casv.getCas();
+        } else {
+          val = null;
+          cas_num = 0;
+        }
+      } else {
+        Future<byte[]> fu = cli.asyncGet(key.str, tc);
+        val = fu.get(op_timeout, TimeUnit.MILLISECONDS);
+        cas_num = 0; // pretend it is zero
+      }
+      values.add(i, val);
+      cas_numbers.add(i, new Long(cas_num));
+    }
+
+    // get attributes
+    int null_count = 0;
+    for (int i = 0; i < server_count; i++) {
+      myclient cli = server_list.get(i);
+      CollectionFuture<CollectionAttributes> f = cli.asyncGetAttr(key.str);
+      CollectionAttributes attr = f.get(op_timeout, TimeUnit.MILLISECONDS);
+      attrs.add(i, attr);
+      if (attr == null) null_count++;
+    }
+
+    // compare attributes
+    if (null_count == server_count) {
+      return comp_result.EQUAL; // all null, okay
+    }
+    comp_result res = compareItemAttributes(key, attrs);
+    if (res != comp_result.EQUAL) {
+      return res; // comp_result.EXIST_DIFF
+    }
+    if (null_count > 0) {
+      return comp_result.EQUAL; // some will be expired
+    }
+
+    // compare value
+    byte[] v0 = values.get(0);
+    for (int i = 1; i < server_count; i++) {
+      byte[] vi = values.get(i);
+      if (!Arrays.equals(v0, vi)) {
+        System.out.println("Values are different." +
+                           " server0=" + server_list.get(0).name +
+                           " serveri=" + server_list.get(i).name);
+        res = comp_result.VAL_DIFF;
+      }
+    }
+    if (res != comp_result.EQUAL)
+      return res;
+
+    // compare cas
+    long cas0 = cas_numbers.get(0);
+    for (int i = 1; i < server_count; i++) {
+      long casi = cas_numbers.get(i);
+      if (cas0 != casi) {
+        System.out.println("CAS numbers are different." +
+                           " server0=" + server_list.get(0).name + " cas0=" + cas0 +
+                           " serveri=" + server_list.get(i).name + " casi=" + casi);
+        res = comp_result.CAS_DIFF;
+      }
+    }
+    if (res != comp_result.EQUAL)
+      return res;
+
+    return res; // comp_result.EQUAL
+  }
+
+  comp_result compare_btree_key(Key key) throws Exception {
+    int server_count = server_list.size();
+    Vector<CollectionAttributes> attrs = new Vector<CollectionAttributes>(server_count);
+
+    // First, get attributes and compare them
+    int null_count = 0;
+    for (int i = 0; i < server_count; i++) {
+      myclient cli = server_list.get(i);
+      CollectionFuture<CollectionAttributes> f = cli.asyncGetAttr(key.str);
+      CollectionAttributes attr = f.get(op_timeout, TimeUnit.MILLISECONDS);
+      attrs.add(i, attr);
+      if (attr == null) null_count++;
+    }
+
+    if (null_count == server_count) {
+      return comp_result.EQUAL; // all null, okay
+    }
+    comp_result res = compareItemAttributes(key, attrs);
+    if (res != comp_result.EQUAL) {
+      return res; // comp_result.EXIST_DIFF
+    }
+    if (null_count > 0) {
+      return comp_result.EQUAL; // some will be expired
+    }
+
+    // compare attributes
+    if (attrs.get(0).getCount() == 0) { // Empty collection
+      stats_btree_empty++;
+      return comp_result.EQUAL;
+    }
+
+    // We cannot reliably tell the bkey type from collection attributes.
+    // When type is BKEY_NULL, it is ambiguous.
+    // Do a get from the first server with both types and see if which one
+    // works.
+    boolean binkey;
+    do {
+      // check bkey type while getting ony 1 element.
+      myclient cli = server_list.get(0);
+
+      CollectionFuture<Map<Long, Element<byte[]>>> f1 =
+        cli.asyncBopGet(key.str, 0, Long.MAX_VALUE, null, 0, 1, false, false, tc);
+      Map<Long, Element<byte[]>> val1 = f1.get(op_timeout, TimeUnit.MILLISECONDS);
+      if (val1 != null) {
+        binkey = false; break;
+      }
+
+      CollectionFuture<Map<ByteArrayBKey, Element<byte[]>>> f2 =
+        cli.asyncBopGet(key.str, ByteArrayBKey.MIN, ByteArrayBKey.MAX, null, 0, 1, false, false, tc);
+      Map<ByteArrayBKey, Element<byte[]>> val2 = f2.get(op_timeout, TimeUnit.MILLISECONDS);
+      if (val2 != null) {
+        binkey = true; break;
+      }
+
+      System.out.println("Attributes show a non-zero count, but cannot fetch elements.");
+      if (attrs.get(0).getExpireTime() <= expDiffLimit) {
+        System.out.println("The item is about to expire. Ignore the error. " +
+                           "exptime=" + attrs.get(0).getExpireTime());
+        return comp_result.EQUAL;
+      }
+      return comp_result.FETCH_ERROR;
+    } while(false);
+
+
+    Vector<Map<Long, Element<byte[]>>> longkey_values = null;
+    Vector<Map<ByteArrayBKey, Element<byte[]>>> binkey_values = null;
+
+    if (binkey) {
+      binkey_values = new Vector<Map<ByteArrayBKey, Element<byte[]>>>(server_count);
+      stats_btree_bytearraybkey++;
+    } else {
+      longkey_values = new Vector<Map<Long, Element<byte[]>>>(server_count);
+    }
+
+    null_count = 0;
+    for (int i = 0; i < server_count; i++) {
+      myclient cli = server_list.get(i);
+      boolean null_value = false;
+      if (binkey) {
+        CollectionFuture<Map<ByteArrayBKey, Element<byte[]>>> f =
+          cli.asyncBopGet(key.str, ByteArrayBKey.MIN, ByteArrayBKey.MAX,
+                          null, 0, 0xffffffff, false, false, tc);
+        Map<ByteArrayBKey, Element<byte[]>> val = f.get(op_timeout, TimeUnit.MILLISECONDS);
+        binkey_values.add(i, val);
+        if (val == null)
+          null_count++;
+      } else {
+        CollectionFuture<Map<Long, Element<byte[]>>> f =
+          cli.asyncBopGet(key.str, 0, Long.MAX_VALUE,
+                          null, 0, 0xffffffff, false, false, tc);
+        Map<Long, Element<byte[]>> val = f.get(op_timeout, TimeUnit.MILLISECONDS);
+        longkey_values.add(i, val);
+        if (val == null)
+          null_count++;
+      }
+    }
+    if (null_count > 0) { // We have non-null attributes, but null values?
+      System.out.println("Key exists on some servers but not others." + " key=" + key.str);
+      for (int i = 0; i < server_count; i++) {
+        System.out.println("attr=" + attrs.get(i));
+        if (binkey) {
+          System.out.println(server_list.get(i).name + " " +
+                     (binkey_values.get(i) == null ?  "not found" : "found"));
+        } else {
+          System.out.println(server_list.get(i).name + " " +
+                     (longkey_values.get(i) == null ?  "not found" : "found"));
+        }
+      }
+      return comp_result.VAL_NULL;
+    }
+
+    res = comp_result.EQUAL;
+    if (binkey == false) {
+      Map<Long, Element<byte[]>> v0 = longkey_values.get(0);
+      Set<Long> v0_bkey = v0.keySet();
+
+      for (int i = 1; i < server_count; i++) {
+        Map<Long, Element<byte[]>> vi = longkey_values.get(i);
+        Set<Long> vi_bkey = vi.keySet();
+
+        boolean equal = true;
+        do {
+          if (v0_bkey.size() != vi_bkey.size()) {
+            System.out.println("Element count are different. key=" + key.str +
+                               "\nserver0=" + server_list.get(0).name +
+                               "  ecount0=" + v0_bkey.size() + " attr0=" + attrs.get(0) +
+                               "\nserveri=" + server_list.get(i).name +
+                               "  ecounti=" + vi_bkey.size() + " attri=" + attrs.get(i));
+            equal = false; break;
+          }
+          if (v0_bkey.size() == 0) {
+            break; // nothing to compare
+          }
+          Iterator<Long> iter = v0_bkey.iterator();
+          while (iter.hasNext()) {
+            Long bk = iter.next();
+            Element<byte[]> v0_elem = v0.get(bk);
+            Element<byte[]> vi_elem = vi.get(bk);
+            if (vi_elem == null) {
+              System.out.println("bkey exists on some servers but not others." +
+                                 " key=" + key.str + " bkey=" + bk +
+                                 "\nserver0=" + server_list.get(0).name + " attr0=" + attrs.get(0) +
+                                 "\nserveri=" + server_list.get(i).name + " attri=" + attrs.get(i));
+              equal = false; break;
+            }
+            equal = Arrays.equals(v0_elem.getValue(), vi_elem.getValue());
+            if (!equal) {
+              System.out.println("Values are different." + " key=" + key.str + " bkey=" + bk +
+                                 "\nserver0=" + server_list.get(0).name + " attr0=" + attrs.get(0) +
+                                 "\nserveri=" + server_list.get(i).name + " attri=" + attrs.get(i));
+              byte[] val;
+              val = v0_elem.getValue();
+              System.out.println("\nv0.length=" + val.length);
+              hexdump(val, val.length);
+              val = vi_elem.getValue();
+              System.out.println("\nvi.length=" + val.length);
+              hexdump(val, val.length);
+              break;
+            }
+            equal = Arrays.equals(v0_elem.getFlag(), vi_elem.getFlag());
+            if (!equal) {
+              System.out.println("Eflags are different." + " key=" + key.str + " bkey=" + bk +
+                                 "\nserver0=" + server_list.get(0).name + " attr0=" + attrs.get(0) +
+                                 "\nserveri=" + server_list.get(i).name + " attri=" + attrs.get(i));
+              break;
+            }
+          }
+        } while(false);
+
+        if (equal == false)
+          res = comp_result.VAL_DIFF;
+      }
+    } else { // binkey == true
+      Map<ByteArrayBKey, Element<byte[]>> v0 = binkey_values.get(0);
+      Set<ByteArrayBKey> v0_bkey = v0.keySet();
+
+      for (int i = 1; i < server_count; i++) {
+        Map<ByteArrayBKey, Element<byte[]>> vi = binkey_values.get(i);
+        Set<ByteArrayBKey> vi_bkey = vi.keySet();
+
+        boolean equal = true;
+        do {
+          if (v0_bkey.size() != vi_bkey.size()) {
+            System.out.println("Element count are different. key=" + key.str +
+                               "\nserver0=" + server_list.get(0).name +
+                               "  ecount0=" + v0_bkey.size() + " attr0=" + attrs.get(0) +
+                               "\nserveri=" + server_list.get(i).name +
+                               "  ecounti=" + vi_bkey.size() + " attri=" + attrs.get(i));
+            equal = false; break;
+          }
+          if (v0_bkey.size() == 0) {
+            break; // nothing to compare
+          }
+          Iterator<ByteArrayBKey> iter = v0_bkey.iterator();
+          while (iter.hasNext()) {
+            ByteArrayBKey bk = iter.next();
+            Element<byte[]> v0_elem = v0.get(bk);
+            Element<byte[]> vi_elem = vi.get(bk);
+            if (vi_elem == null) {
+              System.out.println("bkey exists on some servers but not others." +
+                                 " key=" + key.str + " bkey=" + bk +
+                                 "\nserver0=" + server_list.get(0).name + " attr0=" + attrs.get(0) +
+                                 "\nserveri=" + server_list.get(i).name + " attri=" + attrs.get(i));
+              equal = false; break;
+            }
+            equal = Arrays.equals(v0_elem.getValue(), vi_elem.getValue());
+            if (!equal) {
+              System.out.println("Values are different." + " key=" + key.str + " bkey=" + bk +
+                                 "\nserver0=" + server_list.get(0).name + " attr0=" + attrs.get(0) +
+                                 "\nserveri=" + server_list.get(i).name + " attri=" + attrs.get(i));
+              byte[] val;
+              val = v0_elem.getValue();
+              System.out.println("\nv0.length=" + val.length);
+              hexdump(val, val.length);
+              val = vi_elem.getValue();
+              System.out.println("\nvi.length=" + val.length);
+              hexdump(val, val.length);
+              break;
+            }
+            equal = Arrays.equals(v0_elem.getFlag(), vi_elem.getFlag());
+            if (!equal) {
+              System.out.println("Eflags are different." + " key=" + key.str + " bkey=" + bk +
+                                 "\nserver0=" + server_list.get(0).name + " attr0=" + attrs.get(0) +
+                                 "\nserveri=" + server_list.get(i).name + " attri=" + attrs.get(i));
+              break;
+            }
+          }
+        } while(false);
+
+        if (equal == false)
+          res = comp_result.VAL_DIFF;
+      }
+    }
+    return res;
+  }
+
+  comp_result compare_set_key(Key key) throws Exception {
+    int server_count = server_list.size();
+    Vector<Set<byte[]>> values = new Vector<Set<byte[]>>(server_count);
+    Vector<CollectionAttributes> attrs = new Vector<CollectionAttributes>(server_count);
+
+    // get values
+    for (int i = 0; i < server_count; i++) {
+      myclient cli = server_list.get(i);
+      CollectionFuture<Set<byte[]>> f1 = cli.asyncSopGet(key.str, 1000000, false, false, tc);
+      Set<byte[]> val = f1.get(op_timeout, TimeUnit.MILLISECONDS);
+      values.add(i, val);
+    }
+    // get attributes
+    int null_count = 0;
+    for (int i = 0; i < server_count; i++) {
+      myclient cli = server_list.get(i);
+      CollectionFuture<CollectionAttributes> f2 = cli.asyncGetAttr(key.str);
+      CollectionAttributes attr = f2.get(op_timeout, TimeUnit.MILLISECONDS);
+      attrs.add(i, attr);
+      if (attr == null) null_count++;
+    }
+
+    // compare attributes
+    if (null_count == server_count) {
+      return comp_result.EQUAL; // all null, okay
+    }
+    comp_result res = compareItemAttributes(key, attrs);
+    if (res != comp_result.EQUAL) {
+      return res; // comp_result.EXIST_DIFF
+    }
+    if (null_count > 0) {
+      return comp_result.EQUAL; // some will be expired
+    }
+
+    // compare values
+    boolean equal = true;
+    Set<byte[]> v0 = values.get(0);
+    TreeSet<byte[]>  v0_tset = new TreeSet<byte[]>();
+    Iterator<byte[]> v0_iter = v0.iterator();
+    while (v0_iter.hasNext()) {
+      byte[] v0_elem = v0_iter.next();
+      assert(v0_tset.add(v0_elem) == true);
+    }
+    for (int i = 1; i < server_count; i++) {
+      Set<byte[]> vi = values.get(i);
+      do {
+        if (v0.size() != vi.size()) {
+          equal = false; break;
+        }
+        TreeSet<byte[]>  vi_tset = new TreeSet<byte[]>();
+        Iterator<byte[]> vi_iter = vi.iterator();
+        while (vi_iter.hasNext()) {
+          byte[] vi_elem = vi_iter.next();
+          assert(vi_tset.add(vi_elem) == true);
+        }
+        v0_iter = v0_tset.iterator();
+        vi_iter = vi_tset.iterator();
+        while (v0_iter.hasNext()) {
+          byte[] v0_elem = v0_iter.next();
+          byte[] vi_elem = vi_iter.next();
+          equal = Arrays.equals(v0_elem, vi_elem);
+          if (equal == false)
+            break;
+        }
+      } while(false);
+      if (!equal) {
+        System.out.println("Set sizes are different." +
+                           " server0=" + server_list.get(0).name + " count=" + v0.size() +
+                           " serveri=" + server_list.get(i).name + " count=" + vi.size());
+        res = comp_result.VAL_DIFF;
+      }
+    }
+    return res;
+  }
+
+  comp_result compare_list_key(Key key) throws Exception {
+    int server_count = server_list.size();
+    Vector<List<byte[]>> values = new Vector<List<byte[]>>(server_count);
+    Vector<CollectionAttributes> attrs = new Vector<CollectionAttributes>(server_count);
+
+    // get values
+    for (int i = 0; i < server_count; i++) {
+      myclient cli = server_list.get(i);
+      CollectionFuture<List<byte[]>> f1 =
+        cli.asyncLopGet(key.str, 0, 1000000, false, false, tc);
+      List<byte[]> val = f1.get(op_timeout, TimeUnit.MILLISECONDS);
+      values.add(i, val);
+    }
+    // get attributes
+    int null_count = 0;
+    for (int i = 0; i < server_count; i++) {
+      myclient cli = server_list.get(i);
+      CollectionFuture<CollectionAttributes> f2 = cli.asyncGetAttr(key.str);
+      CollectionAttributes attr = f2.get(op_timeout, TimeUnit.MILLISECONDS);
+      attrs.add(i, attr);
+      if (attr == null) null_count++;
+    }
+
+    // compare attributes
+    if (null_count == server_count) {
+      return comp_result.EQUAL; // all null, okay
+    }
+    comp_result res = compareItemAttributes(key, attrs);
+    if (res != comp_result.EQUAL) {
+      return res; // comp_result.EXIST_DIFF
+    }
+    if (null_count > 0) {
+      return comp_result.EQUAL; // some will be expired
+    }
+
+    // compare values
+    boolean equal = true;
+    List<byte[]> v0 = values.get(0);
+    for (int i = 1; i < server_count; i++) {
+      List<byte[]> vi = values.get(i);
+      do {
+        if (v0.size() != vi.size()) {
+          equal = false; break;
+        }
+        Iterator<byte[]> v0_iter = v0.iterator();
+        Iterator<byte[]> vi_iter = vi.iterator();
+        while (v0_iter.hasNext()) {
+          byte[] v0_elem = v0_iter.next();
+          byte[] vi_elem = vi_iter.next();
+          equal = Arrays.equals(v0_elem, vi_elem);
+          if (equal == false)
+            break;
+        }
+      } while(false);
+      if (equal == false) {
+        System.out.println("Values are different." +
+                           " server0=" + server_list.get(0).name +
+                           " serveri=" + server_list.get(i).name);
+        res = comp_result.VAL_DIFF;
+      }
+    }
+    return res;
+  }
+
+  /*
   // If exptimes are within 2 seconds apart, it is okay.
-  boolean compare_simple_attributes(CollectionAttributes a0, 
+  boolean compare_simple_attributes(CollectionAttributes a0,
                                     CollectionAttributes a1) {
     if (a0 == null && a1 != null) {
       return (a1.getExpireTime() > expDiffLimit ? false : true);
-    } 
+    }
     if (a0 != null && a1 == null) {
       return (a0.getExpireTime() > expDiffLimit ? false : true);
     }
@@ -254,7 +855,7 @@ public class compare {
       int exp1 = a1.getExpireTime();
       if (exp0 != exp1) {
         //  0 has a special meaning: no expiration.
-        // -1 has a special meaning: no expiration & no eviction 
+        // -1 has a special meaning: no expiration & no eviction
         // So, both must be the same.
         if (exp0 == 0 || exp0 == -1 || exp1 == 0 || exp1 == -1)
           return false;
@@ -266,12 +867,14 @@ public class compare {
     }
     return true;
   }
+  */
 
+  /*
   comp_result compare_simple_key(Key key) throws Exception {
     int server_count = server_list.size();
     Vector<byte[]> values = new Vector<byte[]>(server_count);
     Vector<Long> cas_numbers = new Vector<Long>(server_count);
-    Vector<CollectionAttributes> attrs = 
+    Vector<CollectionAttributes> attrs =
       new Vector<CollectionAttributes>(server_count);
 
     int null_count = 0;
@@ -324,8 +927,8 @@ public class compare {
         boolean equal = Arrays.equals(v0, v);
         long cas = cas_numbers.get(i);
         if (!equal) {
-          System.out.println("Values are different. server0=" + 
-                             server_list.get(0).name + 
+          System.out.println("Values are different. server0=" +
+                             server_list.get(0).name +
                              " server=" + server_list.get(i).name);
           res = comp_result.VAL_DIFF;
         }
@@ -343,9 +946,9 @@ public class compare {
       for (int i = 1; i < server_count; i++) {
         CollectionAttributes v_attr = attrs.get(i);
         if (!compare_simple_attributes(v0_attr, v_attr)) {
-          System.out.println("Attributes are different. server0=" + 
+          System.out.println("Attributes are different. server0=" +
                              server_list.get(0).name + " attr0=" + v0_attr +
-                             " server=" + server_list.get(i).name + 
+                             " server=" + server_list.get(i).name +
                              " attr=" + v_attr);
           res = comp_result.ATTR_DIFF;
         }
@@ -357,7 +960,7 @@ public class compare {
       if (!args_quiet) {
         System.out.println("Key exists on some servers but not others.");
         for (int i = 0; i < server_count; i++) {
-          System.out.println(server_list.get(i).name + " " + 
+          System.out.println(server_list.get(i).name + " " +
                              (values.get(i) == null ? "not found" : "found"));
         }
       }
@@ -380,16 +983,18 @@ public class compare {
       return comp_result.EXIST_DIFF;
     }
   }
+  */
 
+  /*
   // If exptimes are within 2 seconds apart, it is okay.
   // All the other attributes must be exactly same.
-  boolean compare_coll_attributes(CollectionAttributes a0, 
+  boolean compare_coll_attributes(CollectionAttributes a0,
                                   CollectionAttributes a1) {
     if (a0 == null && a1 == null)
       return true;
 
     // compare exptime
-    if (!compare_simple_attributes(a0, a1)) 
+    if (!compare_simple_attributes(a0, a1))
       return false;
 
     // compare collection specific attributes
@@ -424,7 +1029,7 @@ public class compare {
         return false;
       }
     }
-    if (!Arrays.equals(a0.getMaxBkeyRangeByBytes(), 
+    if (!Arrays.equals(a0.getMaxBkeyRangeByBytes(),
                        a1.getMaxBkeyRangeByBytes())) {
       System.out.println("maxbkeyrange (bytes) is different");
       return false;
@@ -439,10 +1044,12 @@ public class compare {
     }
     return true;
   }
-  
+  */
+
+  /*
   comp_result compare_btree_key(Key key) throws Exception {
     int server_count = server_list.size();
-    Vector<CollectionAttributes> attrs = 
+    Vector<CollectionAttributes> attrs =
       new Vector<CollectionAttributes>(server_count);
 
     // First, get attributes and compare them
@@ -525,7 +1132,7 @@ public class compare {
     boolean binkey;
     {
       myclient cli = server_list.get(0);
-      CollectionFuture<Map<Long, Element<byte[]>>> f = 
+      CollectionFuture<Map<Long, Element<byte[]>>> f =
         cli.asyncBopGet(key.str, 0, Long.MAX_VALUE, null, 0,
                         0xffffffff, false, false, tc);
       Map<Long, Element<byte[]>> val = f.get(op_timeout, TimeUnit.MILLISECONDS);
@@ -533,10 +1140,10 @@ public class compare {
         binkey = false;
       }
       else {
-        CollectionFuture<Map<ByteArrayBKey, Element<byte[]>>> f2 = 
+        CollectionFuture<Map<ByteArrayBKey, Element<byte[]>>> f2 =
           cli.asyncBopGet(key.str, ByteArrayBKey.MIN, ByteArrayBKey.MAX,
                           null, 0, 0xffffffff, false, false, tc);
-        Map<ByteArrayBKey, Element<byte[]>> val2 = 
+        Map<ByteArrayBKey, Element<byte[]>> val2 =
           f2.get(op_timeout, TimeUnit.MILLISECONDS);
         if (val2 != null)
           binkey = true;
@@ -545,7 +1152,7 @@ public class compare {
                              " cannot fetch elements.");
           if (attrs.get(0).getExpireTime() <= expDiffLimit) {
             System.out.println("The item is about to expire. Ignore the" +
-                               " error. exptime=" + 
+                               " error. exptime=" +
                                attrs.get(0).getExpireTime());
             return comp_result.EQUAL;
           }
@@ -558,29 +1165,29 @@ public class compare {
     Vector<Map<ByteArrayBKey, Element<byte[]>>> binkey_values = null;
 
     if (binkey) {
-      binkey_values = 
+      binkey_values =
         new Vector<Map<ByteArrayBKey, Element<byte[]>>>(server_count);
       stats_btree_bytearraybkey++;
     }
     else {
       longkey_values = new Vector<Map<Long, Element<byte[]>>>(server_count);
     }
-    
+
     null_count = 0;
     for (int i = 0; i < server_count; i++) {
       myclient cli = server_list.get(i);
       if (binkey) {
-        CollectionFuture<Map<ByteArrayBKey, Element<byte[]>>> f = 
+        CollectionFuture<Map<ByteArrayBKey, Element<byte[]>>> f =
           cli.asyncBopGet(key.str, ByteArrayBKey.MIN, ByteArrayBKey.MAX,
                           null, 0, 0xffffffff, false, false, tc);
-        Map<ByteArrayBKey, Element<byte[]>> val = 
+        Map<ByteArrayBKey, Element<byte[]>> val =
           f.get(op_timeout, TimeUnit.MILLISECONDS);
         binkey_values.add(i, val);
         if (val == null)
           null_count++;
       }
       else {
-        CollectionFuture<Map<Long, Element<byte[]>>> f = 
+        CollectionFuture<Map<Long, Element<byte[]>>> f =
           cli.asyncBopGet(key.str, 0, Long.MAX_VALUE, null, 0,
                           0xffffffff, false, false, tc);
         Map<Long, Element<byte[]>> val = f.get(op_timeout, TimeUnit.MILLISECONDS);
@@ -594,7 +1201,7 @@ public class compare {
       // We have non-null attributes, but null values?
       System.out.println("Values are all null");
       for (int i = 0; i < server_count; i++) {
-        System.out.println("server=" + server_list.get(i).name + 
+        System.out.println("server=" + server_list.get(i).name +
                            " attr=" + attrs.get(i));
       }
       return comp_result.VAL_NULL;
@@ -624,7 +1231,7 @@ public class compare {
               System.out.println("bkey exists on some servers but not others." +
                                  " key=" + key.str +
                                  " bkey=" + bk +
-                                 "\nnon-null on server0=" + 
+                                 "\nnon-null on server0=" +
                                  server_list.get(0).name +
                                  " attr0=" + attrs.get(0) +
                                  "\nnull on server=" + server_list.get(i).name +
@@ -637,7 +1244,7 @@ public class compare {
               System.out.println("Values are different." +
                                  "\nkey=" + key.str +
                                  "\nbkey=" + bk +
-                                 "\nserver0=" + server_list.get(0).name + 
+                                 "\nserver0=" + server_list.get(0).name +
                                  "\nattr0=" + attrs.get(0) +
                                  "\nserver=" + server_list.get(i).name +
                                  "\nattr=" + attrs.get(i));
@@ -655,7 +1262,7 @@ public class compare {
               System.out.println("Eflags are different." +
                                  "\nkey=" + key.str +
                                  "\nbkey=" + bk +
-                                 "\nserver0=" + server_list.get(0).name + 
+                                 "\nserver0=" + server_list.get(0).name +
                                  "\nattr0=" + attrs.get(0) +
                                  "\nserver=" + server_list.get(i).name +
                                  "\nattr=" + attrs.get(i));
@@ -689,16 +1296,16 @@ public class compare {
             Element<byte[]> v_elem = v.get(bk);
             equal = Arrays.equals(v0_elem.getValue(), v_elem.getValue());
             if (!equal) {
-              System.out.println("Values are different. server0=" + 
-                                 server_list.get(0).name + 
+              System.out.println("Values are different. server0=" +
+                                 server_list.get(0).name +
                                  " server=" + server_list.get(i).name);
               res = comp_result.VAL_DIFF;
               break;
             }
             equal = Arrays.equals(v0_elem.getFlag(), v_elem.getFlag());
             if (!equal) {
-              System.out.println("Eflags are different. server0=" + 
-                                 server_list.get(0).name + 
+              System.out.println("Eflags are different. server0=" +
+                                 server_list.get(0).name +
                                  " server=" + server_list.get(i).name);
               res = comp_result.EFLAG_DIFF;
               break;
@@ -715,12 +1322,12 @@ public class compare {
       for (int i = 0; i < server_count; i++) {
         System.out.println("attr=" + attrs.get(i));
         if (binkey) {
-          System.out.println(server_list.get(i).name + " " + 
-                             (binkey_values.get(i) == null ? 
+          System.out.println(server_list.get(i).name + " " +
+                             (binkey_values.get(i) == null ?
                               "not found" : "found"));
         }
         else {
-          System.out.println(server_list.get(i).name + " " + 
+          System.out.println(server_list.get(i).name + " " +
                              (longkey_values.get(i) == null ?
                               "not found" : "found"));
         }
@@ -728,16 +1335,18 @@ public class compare {
       return comp_result.EXIST_DIFF;
     }
   }
+  */
 
+  /*
   comp_result compare_set_key(Key key) throws Exception {
     int server_count = server_list.size();
     Vector<Set<byte[]>> values = new Vector<Set<byte[]>>(server_count);
-    Vector<CollectionAttributes> attrs = 
+    Vector<CollectionAttributes> attrs =
       new Vector<CollectionAttributes>(server_count);
 
     for (int i = 0; i < server_count; i++) {
       myclient cli = server_list.get(i);
-      CollectionFuture<Set<byte[]>> f1 = 
+      CollectionFuture<Set<byte[]>> f1 =
         cli.asyncSopGet(key.str, 1000000, false, false, tc);
       Set<byte[]> val = f1.get(op_timeout, TimeUnit.MILLISECONDS);
       values.add(i, val);
@@ -795,7 +1404,7 @@ public class compare {
         }
         if (!equal) {
           System.out.println("Values are different." +
-                             " server0=" + server_list.get(0).name + 
+                             " server0=" + server_list.get(0).name +
                              " count=" + v0.size() +
                              " server=" + server_list.get(i).name +
                              " count=" + v.size());
@@ -809,8 +1418,8 @@ public class compare {
         if (!compare_coll_attributes(v0_attr, v_attr)) {
           String v0_str = v0_attr.toString();
           String v_str = v_attr.toString();
-          System.out.println("Attributes are different. server0=" + 
-                             server_list.get(0).name + 
+          System.out.println("Attributes are different. server0=" +
+                             server_list.get(0).name +
                              " server=" + server_list.get(i).name);
           res = comp_result.ATTR_DIFF;
         }
@@ -821,7 +1430,7 @@ public class compare {
       // some null
       //System.out.println("Key exists on some servers but not others.");
       //for (int i = 0; i < server_count; i++) {
-      //  System.out.println(server_list.get(i).name + " " + 
+      //  System.out.println(server_list.get(i).name + " " +
       //                     (values.get(i) == null ? "not found" : "found"));
       //}
       //return comp_result.EXIST_DIFF;
@@ -847,16 +1456,18 @@ public class compare {
     }
     return comp_result.EQUAL;
   }
+  */
 
+  /*
   comp_result compare_list_key(Key key) throws Exception {
     int server_count = server_list.size();
     Vector<List<byte[]>> values = new Vector<List<byte[]>>(server_count);
-    Vector<CollectionAttributes> attrs = 
+    Vector<CollectionAttributes> attrs =
       new Vector<CollectionAttributes>(server_count);
 
     for (int i = 0; i < server_count; i++) {
       myclient cli = server_list.get(i);
-      CollectionFuture<List<byte[]>> f1 = 
+      CollectionFuture<List<byte[]>> f1 =
         cli.asyncLopGet(key.str, 0, 1000000, false, false, tc);
       List<byte[]> val = f1.get(op_timeout, TimeUnit.MILLISECONDS);
       values.add(i, val);
@@ -899,8 +1510,8 @@ public class compare {
           }
         }
         if (!equal) {
-          System.out.println("Values are different. server0=" + 
-                             server_list.get(0).name + 
+          System.out.println("Values are different. server0=" +
+                             server_list.get(0).name +
                              " server=" + server_list.get(i).name);
           res = comp_result.VAL_DIFF;
         }
@@ -926,7 +1537,7 @@ public class compare {
       // some null
       //System.out.println("Key exists on some servers but not others.");
       //for (int i = 0; i < server_count; i++) {
-      //  System.out.println(server_list.get(i).name + " " + 
+      //  System.out.println(server_list.get(i).name + " " +
       //                     (values.get(i) == null ? "not found" : "found"));
       //}
       //return comp_result.EXIST_DIFF;
@@ -952,6 +1563,7 @@ public class compare {
     }
     return comp_result.EQUAL;
   }
+  */
 
   // FIXME
   int stats_btree_bytearraybkey = 0;
@@ -988,7 +1600,7 @@ public class compare {
     int set_val = 0;
     int set_bad = 0;
     int count = 0;
-    
+
     System.out.println("Start comparing keys...");
     Set<Key> keys = keymap.keySet();
     Iterator<Key> iter = keys.iterator();
@@ -997,7 +1609,7 @@ public class compare {
     int next_progress_tick = progress_tick;
     while (iter.hasNext()) {
       Key key = iter.next();
-      
+
       if (key.type == Key.SIMPLE) {
         comp_result res = compare_simple_key(key);
         switch (res) {
@@ -1118,12 +1730,12 @@ public class compare {
       count++;
       if (count >= next_progress_tick) {
         next_progress_tick += progress_tick;
-        System.out.println("Checked items so far=" + count + 
+        System.out.println("Checked items so far=" + count +
                            " / " + total_items);
       }
     }
 
-    boolean isSame = true; 
+    boolean isSame = true;
     do {
       if (simple_bad > 0 || simple_exist > 0 ||
           simple_attr > 0 || simple_val > 0 || simple_cas > 0 ||
@@ -1148,7 +1760,7 @@ public class compare {
       System.out.println("Finished comparison: SAME");
     } else {
       System.out.println("Finished comparison: DIFFERENT");
-    } 
+    }
     System.out.println("Server list");
     for (myclient cli : server_list) {
       System.out.println(cli.name);
@@ -1161,7 +1773,7 @@ public class compare {
                               "value=%d value_null=%d fetch_error=%d\n",
                       btree_equal, btree_bad, btree_exist, btree_attr,
                       btree_eflag, btree_val, btree_val_null, btree_fetch_error);
-    System.out.printf("       (bytearraybkey=%d expired_on_all=%d empty=%d)\n", 
+    System.out.printf("       (bytearraybkey=%d expired_on_all=%d empty=%d)\n",
                       stats_btree_bytearraybkey, stats_btree_expired_on_all,
                       stats_btree_empty);
     System.out.printf("LIST   ok=%d bad=%d missing=%d attr=%d value=%d\n",
@@ -1281,7 +1893,7 @@ public class compare {
   static public void hexdump(byte[] data, int len) {
     int d;
     int off, i;
-  
+
     // offset  00 11 22 33 44 55 66 77  88 99 aa bb cc dd ee ff  ascii
     d = 0;
     off = 0;
@@ -1347,7 +1959,7 @@ public class compare {
 
     boolean binkey;
     {
-      CollectionFuture<Map<Long, Element<byte[]>>> f = 
+      CollectionFuture<Map<Long, Element<byte[]>>> f =
         cli.asyncBopGet(key.str, 0, Long.MAX_VALUE, null, 0,
                         0xffffffff, false, false, tc);
       Map<Long, Element<byte[]>> val = f.get(op_timeout, TimeUnit.MILLISECONDS);
@@ -1355,10 +1967,10 @@ public class compare {
         binkey = false;
       }
       else {
-        CollectionFuture<Map<ByteArrayBKey, Element<byte[]>>> f2 = 
+        CollectionFuture<Map<ByteArrayBKey, Element<byte[]>>> f2 =
           cli.asyncBopGet(key.str, ByteArrayBKey.MIN, ByteArrayBKey.MAX,
                           null, 0, 0xffffffff, false, false, tc);
-        Map<ByteArrayBKey, Element<byte[]>> val2 = 
+        Map<ByteArrayBKey, Element<byte[]>> val2 =
           f2.get(op_timeout, TimeUnit.MILLISECONDS);
         if (val2 != null)
           binkey = true;
@@ -1373,10 +1985,10 @@ public class compare {
     Map<ByteArrayBKey, Element<byte[]>> binkey_value = null;
 
     if (binkey) {
-      CollectionFuture<Map<ByteArrayBKey, Element<byte[]>>> f = 
+      CollectionFuture<Map<ByteArrayBKey, Element<byte[]>>> f =
         cli.asyncBopGet(key.str, ByteArrayBKey.MIN, ByteArrayBKey.MAX,
                         null, 0, 0xffffffff, false, false, tc);
-      Map<ByteArrayBKey, Element<byte[]>> val = 
+      Map<ByteArrayBKey, Element<byte[]>> val =
         f.get(op_timeout, TimeUnit.MILLISECONDS);
       binkey_value = val;
       if (val == null) {
@@ -1385,7 +1997,7 @@ public class compare {
       }
     }
     else {
-      CollectionFuture<Map<Long, Element<byte[]>>> f = 
+      CollectionFuture<Map<Long, Element<byte[]>>> f =
         cli.asyncBopGet(key.str, 0, Long.MAX_VALUE, null, 0,
                         0xffffffff, false, false, tc);
       Map<Long, Element<byte[]>> val = f.get(op_timeout, TimeUnit.MILLISECONDS);
@@ -1405,7 +2017,7 @@ public class compare {
         while (iter.hasNext()) {
           Long bk = iter.next();
           Element<byte[]> v0_elem = v0.get(bk);
-          System.out.println("bkey=" + bk + " length=" + 
+          System.out.println("bkey=" + bk + " length=" +
                              v0_elem.getValue().length);
         }
       }
