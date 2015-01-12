@@ -3,12 +3,11 @@
 $args_compare = 0;
 
 if ($#ARGV >= 0) {
-    if ($ARGV[0] eq 'compare') {
+  if ($ARGV[0] eq 'compare') {
 	$args_compare = 1;
-    }
-    else {
+  } else {
 	die "Unknown option. arg=" . $ARGV[0];
-    }
+  }
 }
 
 $base_dir = "/home1/username/openarcus";
@@ -46,15 +45,15 @@ $compare_cmd="java -classpath $classpath:$compare_dir" .
 );
 
 foreach $script (@script_list) {
-    # Flush all before each test
-    $cmd = "./flushall.bash localhost 11211";
-    print "DO_FLUSH_ALL. $cmd\n";
-    system($cmd);
-    sleep 4;
+  # Flush all before each test
+  $cmd = "./flushall.bash localhost 11211";
+  print "DO_FLUSH_ALL. $cmd\n";
+  system($cmd);
+  sleep 4;
 
-    # Create a temporary config file to run the test
-    open CONF, ">tmp-config.txt" or die $!;
-    print CONF 
+  # Create a temporary config file to run the test
+  open CONF, ">tmp-config.txt" or die $!;
+  print CONF 
 	"zookeeper=127.0.0.1:2181\n" .
 	"service_code=test\n" .
 	"client=30\n" .
@@ -69,19 +68,19 @@ foreach $script (@script_list) {
 	"pool_use_random=false\n" .
 	"key_prefix=tmptest:\n" .
 	"client_profile=" . $script . "\n";
-    close CONF;
+  close CONF;
 
-    $cmd = "java -Xmx2g -Xms2g -Dnet.spy.log.LoggerImpl=net.spy.memcached.compat.log.Log4JLogger" .
-	" -classpath $classpath:. acp -config tmp-config.txt";
-    printf "RUN COMMAND=%s\n", $cmd;
+  $cmd = "java -Xmx2g -Xms2g -Dnet.spy.log.LoggerImpl=net.spy.memcached.compat.log.Log4JLogger" .
+   	     " -classpath $classpath:. acp -config tmp-config.txt";
+  printf "RUN COMMAND=%s\n", $cmd;
 
-    local $SIG{TERM} = sub { print "TERM SIGNAL\n" };
+  local $SIG{TERM} = sub { print "TERM SIGNAL\n" };
 
-    $ret = system($cmd);
-    printf "EXIT CODE=%d\n", $ret;
+  $ret = system($cmd);
+  printf "EXIT CODE=%d\n", $ret;
 
-    # Run comparison tool
-    if ($args_compare) {
+  # Run comparison tool
+  if ($args_compare) {
 	#$cmd = "/usr/bin/ssh cachehost \"rm -f $misc_dir/keydump*\"";
 	#print "$cmd\n";
 	#system($cmd);
@@ -112,7 +111,7 @@ foreach $script (@script_list) {
 	system($cmd);
 	
 	system($compare_cmd);
-    }
+  }
 }
 
 print "END RUN_MC_TESTSCRIPTS\n";
