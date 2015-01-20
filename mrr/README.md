@@ -12,7 +12,7 @@ $ make
 Run
 ---
 
-First, check the usage with fillowing command.
+First, check the usage with `-h` opttion.
 
 ```
 $ ./mrr -h
@@ -24,7 +24,7 @@ To start as a server process, run mrr with `-s` option like followings.
 $ ./mrr -s -addr <IP> -port <port>
 ```
 
-To start as a client process, run mrr withoud `-s` option like followings.
+To start as a client process, run mrr without `-s` option like followings.
 
 ```
 $ ./mrr -addr <server IP> -port <server port>
