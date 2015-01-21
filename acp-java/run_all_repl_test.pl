@@ -85,15 +85,15 @@ foreach $script (@script_list) {
     "client=30\n" .
     "rate=0\n" .
     "request=0\n" .
-    "time=120\n" .
+    "time=240\n" .
     "keyset_size=1000000\n" .
     "valueset_min_size=10\n" .
-    "valueset_max_size=2000\n" .
+    "valueset_max_size=4000\n" .
     "pool=1\n" .
     "pool_size=30\n" .
     "pool_use_random=false\n" .
     "key_prefix=tmptest:\n" .
-    "client_exptime=3600\n" .
+    "client_exptime=160\n" .
     "client_profile=" . $script . "\n";
   close CONF;
 
