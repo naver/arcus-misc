@@ -227,6 +227,13 @@ public class compare {
       myclient cli = new myclient(addr, inet_list);
       server_list.add(cli);
     }
+    // just wait for memcached connection to do some preparation.
+    Thread.sleep(100L);
+    // print server list 
+    System.out.println("Server list");
+    for (myclient cli : server_list) {
+      System.out.println(cli.name);
+    }
   }
 
   void cleanup() throws Exception {
@@ -1760,10 +1767,6 @@ public class compare {
       System.out.println("Finished comparison: SAME");
     } else {
       System.out.println("Finished comparison: DIFFERENT");
-    }
-    System.out.println("Server list");
-    for (myclient cli : server_list) {
-      System.out.println(cli.name);
     }
     System.out.printf("SIMPLE ok=%d bad=%d missing=%d attr=%d value=%d cas=%d\n" +
                       "       missing_0=%d missing_0_expired=%d missing_1=%d missing_1_expired=%d\n",
