@@ -212,8 +212,8 @@ public class compare {
                       /* (int)sum.getValue() */ 0);
       keymap.put(k, k);
     }
-    if (keymap.size() == 0)
-      throw new Exception("There are no keys.");
+    //if (keymap.size() == 0)
+    //  throw new Exception("There are no keys.");
 
     // Make one client per server
     if (args_server.size() < 2)
