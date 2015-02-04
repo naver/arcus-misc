@@ -523,7 +523,8 @@ void
 usage(void)
 {
   printf(
-    "mrr options\n"
+    "mrr <options>\n"
+    "-h             print mrr usage\n"
     "-s             server mode\n"
     "-addr ip       server address\n"
     "-port port     server port\n"
@@ -596,6 +597,9 @@ parse_args(int argc, char *argv[])
     }
     else if (0 == strcmp(argv[i], "-s")) {
       args_s = 1;
+    }
+    else if (0 == strcmp(argv[i], "-h")) {
+      usage();
     }
     else {
       printf("Unknown option: %s\n", argv[i]);

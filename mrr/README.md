@@ -16,6 +16,15 @@ First, check the usage with `-h` opttion.
 
 ```
 $ ./mrr -h
+mrr <options>
+-h             print mrr usage
+-s             server mode
+-addr ip       server address
+-port port     server port
+-backlog num   listen backlog
+-sleep usec    sleep <usec> microseconds between requests
+-m size        message size in bytes
+-t threads     request-response threads
 ```
 
 To start as a server process, run mrr with `-s` option like followings.
