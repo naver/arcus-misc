@@ -356,7 +356,7 @@ public class compare {
       }
     }
     if (totResult == comp_result.EXIST_DIFF) {
-      System.out.println("Key exists on some servers but not others.");
+      System.out.println("Attr exists on some servers but not others." + " key=" + key.str);
       for (int i = 0; i < server_count; i++) {
         if (attrs.get(i) == null) {
           System.out.println(server_list.get(i).name + " not found");
