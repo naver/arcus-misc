@@ -13,11 +13,15 @@ $ZK_CLI $ZK_ADDR create /arcus_1_7/cache_server_log 0
 
 $ZK_CLI $ZK_ADDR create /arcus_1_7/cache_list 0
 $ZK_CLI $ZK_ADDR create /arcus_1_7/cache_list/test 0
+# ehpemeral znode = <group>^M^<ip:port-hostname> 0 // created by cache node
+# ehpemeral znode = <group>^S^<ip:port-hostname> 0 // created by cache node
 
 $ZK_CLI $ZK_ADDR create /arcus_1_7/cache_server_group 0
 $ZK_CLI $ZK_ADDR create /arcus_1_7/cache_server_group/test 0
 $ZK_CLI $ZK_ADDR create /arcus_1_7/cache_server_group/test/g0 0
 $ZK_CLI $ZK_ADDR create /arcus_1_7/cache_server_group/test/g0/lock 0
+# ehpemeral/sequence znode = <nodeip:port>^<listenip:port>^<sequence> 0
+# ehpemeral/sequence znode = <nodeip:port>^<listenip:port>^<sequence> 0
 
 $ZK_CLI $ZK_ADDR create /arcus_1_7/cache_server_mapping 0
 $ZK_CLI $ZK_ADDR create /arcus_1_7/cache_server_mapping/127.0.0.1:11215 0
