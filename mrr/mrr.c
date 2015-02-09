@@ -462,6 +462,7 @@ main(int argc, char *argv[])
 
       printf("%u request-responses/s\n", cur_count - prev_count);
       for (i = 0; i < HIST_BIN_COUNT; i++) {
+        if (cur_hist.bin[i] == 0) continue;
         printf("%d: %u[%u]\n", ((i+1) * HIST_BIN_WIDTH),
           cur_hist.bin[i], cur_hist.bin[i] - prev_hist.bin[i]);
       }
