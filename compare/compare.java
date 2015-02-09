@@ -569,6 +569,20 @@ public class compare {
       }
     }
     if (null_count > 0) { // We have non-null attributes, but null values?
+      boolean is_same = true;
+      for (int i = 0; i < server_count; i++) {
+        if (binkey) {
+          if (binkey_values.get(i) == null && attrs.get(i).getExpireTime() > 1) {
+            is_same = false; break;
+          }
+        } else {
+          if (longkey_values.get(i) == null && attrs.get(i).getExpireTime() > 1) {
+            is_same = false; break;
+          }
+        }
+      }
+      if (is_same == true) return comp_result.EQUAL;
+
       System.out.println("Key exists on some servers but not others." + " key=" + key.str);
       for (int i = 0; i < server_count; i++) {
         System.out.println("attr=" + attrs.get(i));
