@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -147,7 +148,7 @@ public class AsyncBopPipedInsertBulkTest extends ArcusTest {
 			assert entry.getValue().getResponse() == CollectionResponse.OUT_OF_RANGE : 
 				entry.getKey() + " bkey response must be OUT_OF_RANGE. " 
 				+ "but return response is " + entry.getValue().getResponse();
-			System.out.printf("RESULT : bkey %d | %s\n", entry.getKey(), entry.getValue());
+			System.out.printf("RESULT : bkey %ld | %s\n", elements.get(entry.getKey()).getLongBkey(), entry.getValue());
 		}
 		System.out.printf("OK!\n\n");
 		
