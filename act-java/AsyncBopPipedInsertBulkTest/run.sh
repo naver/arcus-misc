@@ -5,4 +5,4 @@ LIB_CP=$JAVA_CLIENT:$JAVA_CLIENT_LIB_DIR/zookeeper-3.4.5.jar:$JAVA_CLIENT_LIB_DI
 
 rm -f bin/*.class
 javac -sourcepath src -d bin -Xlint:deprecation -cp $JAVA_CLIENT:. src/AsyncBopPipedInsertBulkTest.java
-java -ea -Xmx2g -Xms2g "-Dnet.spy.log.LoggerImpl=net.spy.memcached.compat.log.Log4JLogger" "-Dlog4j.configuration=./log4j.properties" -cp $LIB_CP:bin AsyncBopPipedInsertBulkTest $@
+java -ea -Xmx2g -Xms2g "-Dnet.spy.log.LoggerImpl=net.spy.memcached.compat.log.Log4JLogger" "-Dlog4j.configuration=file://$PWD/log4j.properties" -cp $LIB_CP:bin AsyncBopPipedInsertBulkTest $@
