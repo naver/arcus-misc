@@ -95,7 +95,7 @@ public class AsyncBopPipedInsertBulkTest extends ArcusTest {
 		/* get element test bkey is 0
 		 * is trimmed. response is NOT_FOUND_ELEMENT 
 		 */
-		checkBkey(key, 0, CollectionResponse.NOT_FOUND_ELEMENT);
+		checkBkey(key, 0, CollectionResponse.NOT_FOUND_ELEMENT, CollectionResponse.OUT_OF_RANGE);
 
 		
 		/* get elements that bkey is 20
@@ -126,7 +126,7 @@ public class AsyncBopPipedInsertBulkTest extends ArcusTest {
 		List<Element<Object>> elements = new ArrayList<Element<Object>>();
 		byte[] eflag = { 0 };
 
-		System.out.printf("Create %d ~ %d elements.\n", from, to);
+		// System.out.printf("Create %d ~ %d elements.\n", from, to);
 		if (from <= to) {
 			for (int bkey = from; bkey <= to; bkey++)
 				elements.add(new Element<Object>((long) bkey, "VALUE" + bkey, eflag));
@@ -140,8 +140,10 @@ public class AsyncBopPipedInsertBulkTest extends ArcusTest {
 			+ arcusClient.getMaxPipedItemCount()
 			+ ". but element count is " + elements.size();
 
+		/*
 		System.out.printf("RESULT : %d <= MaxPipedItemCount(%d). OK!\n\n", 
 						  elements.size(), arcusClient.getMaxPipedItemCount());
+		*/
 
 		return elements;
 	}
@@ -179,20 +181,31 @@ public class AsyncBopPipedInsertBulkTest extends ArcusTest {
 		}
 	}
 
-	private void checkBkey(String key, long bkey, CollectionResponse expectedRes) 
+	private void checkBkey(String key, long bkey, CollectionResponse... expectedResList) 
 		throws InterruptedException, ExecutionException {
 		CollectionFuture<Map<Long, Element<Object>>> getFuture;
 		@SuppressWarnings("unused")
 		Map<Long, Element<Object>> getResult;
 		
-		System.out.printf("Get element(bkey 0) and check reponse.\n");
+		System.out.printf("Get element(bkey %d) and check reponse.\n", bkey);
 		getFuture = arcusClient.asyncBopGet(key, bkey, null, false, false);
 		
 		getResult = getFuture.get();
-		assert getFuture.getOperationStatus().getResponse() == expectedRes :
-				"Response(bkey " + bkey + ") is must NOT_FOUND_ELEMENT! "
+		if (expectedResList.length > 1) {
+			/* this is very special case */ 
+			assert getFuture.getOperationStatus().getResponse() == expectedResList[0] ||
+				   getFuture.getOperationStatus().getResponse() == expectedResList[1] :
+				"Expected Response(bkey " + bkey + ") is "
+				+ expectedResList[0] + " or " + expectedResList[1]
 				+ "but Return Response is "
 				+ getFuture.getOperationStatus().getMessage();
+		} else {
+			assert getFuture.getOperationStatus().getResponse() == expectedResList[0] :
+					"Expected Response(bkey " + bkey + ") is "
+					+ expectedResList[0]
+					+ "but Return Response is "
+					+ getFuture.getOperationStatus().getMessage();
+		}
 		System.out.printf("RESULT : %s. OK!\n\n", getFuture.getOperationStatus().getResponse());
 	}
 
