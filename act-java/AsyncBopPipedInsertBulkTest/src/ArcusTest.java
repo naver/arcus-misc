@@ -52,7 +52,7 @@ public abstract class ArcusTest {
 	}
 	
 	public void printUsage() {
-		String usageTxt = "AsyncBopPipedInsertBulkTest [-ARCUS_ADMIN 127.0.0.1] [-SERVICE_CODE \"test\"]";
+		String usageTxt = "AsyncBopPipedInsertBulkTest [-ARCUS_ADMIN 127.0.0.1:2181] [-SERVICE_CODE \"test\"]";
 		System.out.println(usageTxt);
 		System.exit(0);
 	}
