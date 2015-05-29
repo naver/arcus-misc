@@ -43,7 +43,7 @@ public abstract class ArcusTest {
 					System.out.println("-SERVICE_CODE requires service string");
 					System.exit(0);
 				}
-				ARCUS_ADMIN = args[i];
+				SERVICE_CODE = args[i];
 			} else {
 				System.out.println("Unknown Arguments");
 				this.printUsage();
