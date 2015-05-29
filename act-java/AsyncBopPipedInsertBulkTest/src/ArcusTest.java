@@ -1,8 +1,5 @@
-import java.util.concurrent.ExecutionException;
-
 import net.spy.memcached.ArcusClient;
 import net.spy.memcached.ConnectionFactoryBuilder;
-import net.spy.memcached.internal.CollectionFuture;
 import net.spy.memcached.internal.OperationFuture;
 
 public abstract class ArcusTest {
