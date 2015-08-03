@@ -93,7 +93,7 @@ public class torture_btree_decinc implements client_profile {
       Long lv = fl.get(1000L, TimeUnit.MILLISECONDS);
       // The returned value is the result of decrement.
       ok = true;
-      if (lv.longValue() != 0) {
+      if (lv == null || lv.longValue() != 0) {
         ok = false;
         System.out.println("Unexpected value from decrement. result=" +
                            lv.longValue() + " bkey=" + bkey + " key=" + key);
@@ -121,7 +121,7 @@ public class torture_btree_decinc implements client_profile {
         cli.next_ac.asyncBopIncr(key, bkey, (int)(bkey+1));
       Long lv = fl.get(1000L, TimeUnit.MILLISECONDS);
       ok = true;
-      if (lv.longValue() != (bkey+1)) {
+      if (lv == null || lv.longValue() != (bkey+1)) {
         ok = false;
         System.out.println("Unexpected value from increment. result=" +
                            lv.longValue() + " expected=" + (bkey+1));
