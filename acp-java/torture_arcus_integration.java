@@ -267,8 +267,8 @@ public class torture_arcus_integration implements client_profile {
         boolean ok = f.get(1000L, TimeUnit.MILLISECONDS);
         if (!ok) {
           System.out.printf("Collection_Btree: BopInsert failed." +
-                            " id=%d key=%s bkey=%d: %s\n", cli.id,
-                            key_list.get(j), bkey,
+                            " id=%d key=%s bkey=%s: %s\n", cli.id,
+                            key_list.get(j), bk,
                             f.getOperationStatus().getResponse());
         }
         if (!cli.after_request(ok))
