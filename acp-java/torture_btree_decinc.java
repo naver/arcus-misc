@@ -95,18 +95,21 @@ public class torture_btree_decinc implements client_profile {
       ok = true;
       if (lv == null || lv.longValue() != 0) {
         ok = false;
-        System.out.println("Unexpected value from decrement. result=" +
-                           lv.longValue() + " bkey=" + bkey + " key=" + key);
+        System.out.println("Unexpected value from decrement. result="
+                           + (lv != null ? lv.longValue() : "null")
+                           + " bkey=" + bkey + " key=" + key);
         CollectionFuture<Map<Long, Element<Object>>> f = 
           cli.next_ac.asyncBopGet(key, bkey, null, false, false);
         Map<Long, Element<Object>> val = f.get(1000L, TimeUnit.MILLISECONDS);
         if (val == null) {
           System.out.println("Null value");
-        }
-        else {
+        } else {
+          System.out.println("elem=" + val);
+          /*
           Element<Object> elem = val.get(bkey);
           byte[] elem_val = (byte[])elem.getValue();
           System.out.println("elem=" + new String(elem_val));
+          */
         }
       }
       if (!cli.after_request(ok))
@@ -123,8 +126,9 @@ public class torture_btree_decinc implements client_profile {
       ok = true;
       if (lv == null || lv.longValue() != (bkey+1)) {
         ok = false;
-        System.out.println("Unexpected value from increment. result=" +
-                           lv.longValue() + " expected=" + (bkey+1));
+        System.out.println("Unexpected value from increment. result="
+                           + (lv != null ? lv.longValue() : "null")
+                           + " expected=" + (bkey+1));
       }
       if (!cli.after_request(ok))
         return false;
