@@ -57,11 +57,13 @@ public class torture_cas implements client_profile {
       cli.next_ac.asyncGets(key, raw_transcoder.raw_tc);
     CASValue<byte[]> casv = fcv.get(1000L, TimeUnit.MILLISECONDS);
     ok = (casv != null);
-    if (!ok) {
-      System.out.printf("gets failed. id=%d key=%s\n", cli.id, key);
-    }
     if (!cli.after_request(ok))
       return false;
+    if (!ok) {
+      System.out.printf("gets failed. id=%d key=%s\n", cli.id, key);
+      return true; // stop doing CAS operations.
+    }
+
     byte[] get_val = casv.getValue();
     long cas_num = casv.getCas();
     if (!Arrays.equals(val, get_val)) {
