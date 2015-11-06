@@ -510,7 +510,7 @@ public class torture_arcus_integration implements client_profile {
       if (!cli.before_request())
         return false;
       CollectionFuture<Map<Integer, CollectionOperationStatus>> f =
-        cli.next_ac.asyncSopPipedInsertBulk(key, elements, 
+        cli.next_ac.asyncSopPipedInsertBulk(key_list.get(0), elements, 
                                             new CollectionAttributes());
       Map<Integer, CollectionOperationStatus> status_map = 
         f.get(1000L, TimeUnit.MILLISECONDS);
@@ -522,7 +522,7 @@ public class torture_arcus_integration implements client_profile {
         if (resp != CollectionResponse.STORED) {
           System.out.printf("Collection_Set: SopPipedInsertBulk failed." +
                             " id=%d key=%s response=%s\n", cli.id,
-                            key, resp);
+                            key_list.get(0), resp);
         }
       }
       if (!cli.after_request(true))
@@ -577,12 +577,11 @@ public class torture_arcus_integration implements client_profile {
       if (!cli.before_request())
         return false;
       attr.setExpireTime(100);
-      CollectionFuture<Boolean> f =
-        cli.next_ac.asyncSetAttr(key_list.get(0), attr);
+      CollectionFuture<Boolean> f = cli.next_ac.asyncSetAttr(key, attr);
       boolean ok = f.get(1000L, TimeUnit.MILLISECONDS);
       if (!ok) {
         System.out.printf("Collection_Set: SetAttr failed." +
-                          " id=%d key=%s: %s\n", cli.id, key_list.get(0),
+                          " id=%d key=%s: %s\n", cli.id, key,
                           f.getOperationStatus().getResponse());
       }
       if (!cli.after_request(ok))
