@@ -16,10 +16,9 @@ $ZK_CLI $ZK_ADDR create /arcus_repl/cache_list/test 0
 # ehpemeral znode = <group>^M^<ip:port-hostname> 0 // created by cache node
 # ehpemeral znode = <group>^S^<ip:port-hostname> 0 // created by cache node
 
-$ZK_CLI $ZK_ADDR create /arcus_repl/cache_server_group 0
-$ZK_CLI $ZK_ADDR create /arcus_repl/cache_server_group/test 0
-$ZK_CLI $ZK_ADDR create /arcus_repl/cache_server_group/test/g0 0
-$ZK_CLI $ZK_ADDR create /arcus_repl/cache_server_group/test/g0/lock 0
+$ZK_CLI $ZK_ADDR create /arcus_repl/group_list 0
+$ZK_CLI $ZK_ADDR create /arcus_repl/group_list/test 0
+$ZK_CLI $ZK_ADDR create /arcus_repl/group_list/test/g0 0
 # ehpemeral/sequence znode = <nodeip:port>^<listenip:port>^<sequence> 0
 # ehpemeral/sequence znode = <nodeip:port>^<listenip:port>^<sequence> 0
 
