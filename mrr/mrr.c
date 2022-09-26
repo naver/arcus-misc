@@ -152,7 +152,7 @@ checker_remove_so(int so)
   for (i = 0; i < CHECK_MAX_SO; i++) {
     if (checker_so[i] >= 0)
       checker_so[checker_so_num++] = checker_so[i];
-  }  
+  }
   pthread_mutex_unlock(&checker_lock);
 }
 
@@ -182,7 +182,6 @@ check_thread(void *arg)
         max_retransmits = info.tcpi_retransmits;
       if (max_backoff == 0 || max_backoff < info.tcpi_backoff)
         max_backoff = info.tcpi_backoff;
-      total_retrans += info.tcpi_total_retrans;
     }
   }
   return NULL;
@@ -191,11 +190,22 @@ check_thread(void *arg)
 static void
 print_checker(void)
 {
-    printf("rto=%u:%u max_retrans=%u max_backoff=%u rtt=%u:%u tot_retrans=%u\n",
-      max_rto, min_rto, max_retransmits, max_backoff, max_rtt, min_rtt,
-      total_retrans);
-    max_rto = min_rto = max_retransmits =  max_backoff = 0; 
-    max_rtt = min_rtt = total_retrans = 0;
+  int i;
+  for (i = 0; i < checker_so_num; i++) {
+    int so = checker_so[i];
+    struct tcp_info info;
+    socklen_t size = sizeof(info);
+    if (0 != getsockopt(so, IPPROTO_TCP, TCP_INFO, &info, &size))
+      continue;
+
+    total_retrans += info.tcpi_total_retrans;
+  }
+
+  printf("rto=%u:%u max_retrans=%u max_backoff=%u rtt=%u:%u tot_retrans=%u\n",
+    max_rto, min_rto, max_retransmits, max_backoff, max_rtt, min_rtt,
+    total_retrans);
+  max_rto = min_rto = max_retransmits =  max_backoff = 0;
+  max_rtt = min_rtt = total_retrans = 0;
 }
 
 static void *
@@ -272,7 +282,7 @@ rr_thread(void *arg)
             goto exit;
           }
         }
-      }      
+      }
       s = write(r->so, r->buf, msg_len);
       if (s != msg_len) {
         log_msg("%d: write failed. s=%d msg_len=%d error=%s(%d). stopping\n",
@@ -289,7 +299,7 @@ rr_thread(void *arg)
       char *buf;
 
       // Sleep a little and then send a request and receive a response
-      
+
       if (r->sleep > 0)
         usleep(r->sleep);
 
@@ -323,9 +333,9 @@ rr_thread(void *arg)
       hist_inc(&r->hist, (uint32_t)msec);
     }
   }
-  
+
 exit:
-  
+
 #if CHECK_RTO_RETRANS
   checker_remove_so(r->so);
 #endif
@@ -380,13 +390,13 @@ main(int argc, char *argv[])
       pthread_create(&tid, &attr, stat_thread, NULL);
   }
 #endif
-  
+
   if (args_s) {
     int one = 1;
     int new_conn;
     int id = 0;
     struct rr *r;
-    
+
     so = socket(AF_INET, SOCK_STREAM, 0);
     if (so < 0) {
       PERROR_DIE("socket");
@@ -402,7 +412,7 @@ main(int argc, char *argv[])
     }
     while ((new_conn = accept(so, NULL, NULL)) > 0) {
       log_msg("server accepted a conn. so=%d id=%d\n", new_conn, id);
-      
+
       r = malloc(sizeof(*r));
       memset(r, 0, sizeof(*r));
       r->id = id++;
@@ -419,7 +429,7 @@ main(int argc, char *argv[])
     int i;
     struct hist prev_hist, cur_hist;
     uint32_t prev_count, cur_count;
-    
+
     ra = malloc(sizeof(*ra) * args_t);
     memset(ra, 0, sizeof(*ra) * args_t);
     for (i = 0; i < args_t; i++) {
@@ -432,7 +442,7 @@ main(int argc, char *argv[])
       }
 
       log_msg("connected to server. so=%d id=%d\n", so, i);
-      
+
       r = &ra[i];
       r->id = i;
       r->so = so;
@@ -442,13 +452,13 @@ main(int argc, char *argv[])
       pthread_attr_setscope(&r->attr, PTHREAD_SCOPE_SYSTEM);
       pthread_create(&r->tid, &r->attr, rr_thread, r);
     }
-    
+
     // Print stats forever
     memset(&prev_hist, 0, sizeof(prev_hist));
     prev_count = 0;
     while (1) {
       sleep(1);
-      
+
       // Gather stats from threads
       memset(&cur_hist, 0, sizeof(cur_hist));
       cur_count = 0;
@@ -474,7 +484,7 @@ main(int argc, char *argv[])
 #endif
     }
   }
-  
+
   return 0;
 }
 
@@ -484,7 +494,7 @@ log_msg(const char *fmt, ...)
   time_t t;
   struct tm tm;
   va_list ap;
-  
+
   t = time(NULL);
   localtime_r(&t, &tm);
   printf("[%04d/%02d/%02d-%02d:%02d:%02d] ",
@@ -510,7 +520,7 @@ filladdr(char *host, struct sockaddr_in *addr)
     if (sizeof(struct in_addr) != h->h_length) {
       ERROR_DIE("h_length");
     }
-    
+
     addr->sin_family = AF_INET;
     addr->sin_addr.s_addr = *((uint32_t*)h->h_addr_list[0]);
   }
